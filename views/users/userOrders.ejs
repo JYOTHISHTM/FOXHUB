@@ -1,0 +1,111 @@
+<%- include('../layouts/header.ejs') %>
+<%- include('../layouts/navbar.ejs') %>
+
+<style>
+.table-container {
+  width: 1050px;
+  height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: #343a40; 
+  color: white;
+  z-index: 100;
+}
+
+.table tbody tr td {
+  text-align: center !important;
+  vertical-align: middle;
+  padding: 14px -1px;
+}
+
+</style>
+
+<link rel="stylesheet" href="/css/sidebar.css">
+
+<div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Orders</span></p>
+        <h1 class="mb-0 bread">My ORDERS</h1>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../profileLayouts/sideBar.ejs') %>
+
+<div class="container my-5 d-flex justify-content-center align-items-center" style="min-height: 50vh;">
+  <div class="row w-100 justify-content-center" style="margin-top: -35%">
+    <div class="col-md-9" style="margin-left: -6%;">
+      <% if (!orders || orders.length === 0) { %>
+        <% if (!loggedIn) { %>
+          <p>Please <a href="/login">login</a> to view your orders.</p>
+        <% } else { %>
+          <p style="margin-top: 0; margin-bottom: 11rem; margin-left: 52%;">No orders found.</p>
+        <% } %>
+      <% } else { %>
+        <div class="table-container">
+          <table class="table table-striped">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">Product Image</th>
+                <th scope="col">Product Name</th>
+                <th scope="col">Price</th>
+                <th scope="col">Status</th>
+                <th scope="col">Details</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <% orders.forEach(order => { %>
+                <% order.items.forEach(item => { %>
+                  <tr>
+                    <% if (item.productId) { %>
+                      <td><img src="/productImage/<%= item.productId.images[0] %>" alt="<%= item.productId.name %>" style="width: 100px;"></td>
+                      <td><%= item.productId.name %></td>
+                      <td><%= item.finalPriceAfterCoupon.toFixed(2) %></td>
+                      <td>
+                        <% const status = item.status || order.status; %>
+                        <% if (status === 'Processing') { %>
+                          <span class="badge bg-warning text-white"><%= status %></span>
+                        <% } else if (status === 'Shipped') { %>
+                          <span class="badge bg-primary"><%= status %></span>
+                        <% } else if (status === 'Delivered') { %>
+                          <span class="badge bg-success"><%= status %></span>
+                        <% } else if (status === 'Cancelled') { %>
+                          <span class="badge bg-danger"><%= status %></span>
+                        <% } else if (status === 'Returned') { %>
+                          <span class="badge bg-secondary"><%= status %></span>
+                        <% } else if (status === 'Pending') { %>
+                          <span class="badge bg-info">Pending</span>
+                        <% } else if (status === 'Payment Failed') { %>
+                          <span class="badge bg-danger">Payment Failed</span>
+                        <% } else { %>
+                          <span><%= status %></span>
+                        <% } %>
+                      </td>
+                      <td><a href="/orderDetails/<%= order._id %>/<%= item.productId._id %>" class="btn btn-primary">View Details</a></td>
+                    <% } else { %>
+                      <td colspan="2">Product information not available</td>
+                      <td>N/A</td>
+                      <td><span class="badge bg-dark">Not Supported</span></td>
+                      <td>N/A</td>
+                    <% } %>
+                  </tr>
+                <% }); %>
+              <% }); %>
+            </tbody>
+
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer.ejs') %>

@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dummy Button</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <button id="dummyButton">Click Me</button>
+    <div id="output"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
+<style>#dummyButton {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+#dummyButton.clicked {
+  background-color: #ff0000; /* Change to desired color */
+}
+</style>
+
+<script>
+  // Get the button and output div elements
+const dummyButton = document.getElementById('dummyButton');
+const outputDiv = document.getElementById('output');
+
+// Add a click event listener to the button
+dummyButton.addEventListener('click', function() {
+  // Update the output div with "Hi"
+  outputDiv.textContent = 'Hi';
+
+  // Toggle the "clicked" class on the button
+  this.classList.toggle('clicked');
+});
+
+</script>

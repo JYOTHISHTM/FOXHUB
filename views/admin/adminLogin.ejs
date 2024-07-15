@@ -1,0 +1,99 @@
+<!-- <form action="/admin/dashboard" method="post">
+<h1>admin login</h1>
+    <input type="email" name="email" placeholder="enter your name">
+    <br>
+    <br>
+    <input type="password" name="password" placeholder="enter your password">
+    <br>
+    <br>
+    <input type="submit" value="login">
+    
+    </form> -->
+<!-- //////////// -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Form</title>
+  <!-- Link to Font Awesome CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    integrity="sha512-lPEyZb3VyJW+4Xj5mVh0/1LuOp4PSqpxZL65SdwcnzVSJmsheXj8eBjErqQGQ+xrzzxJGyGkj9eruHb6BECSKw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Link to MDB Bootstrap CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.1.0/mdb.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
+
+  <!-- Link to custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <style>
+    .gradient-custom {
+      /* fallback for old browsers */
+      background: #8f8d90;
+
+      /* Chrome 10-25, Safari 5.1-6 */
+      background: -webkit-linear-gradient(to right, rgb(0, 0, 0), rgb(0, 0, 0));
+
+      /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+      background: linear-gradient(to right, rgb(31, 55, 191), rgb(29, 48, 135))
+    }
+  </style>
+
+  <section class="vh-100 gradient-custom">
+    <div class="container py-5 h-100">
+      <div class="row d-flex justify-content-center align-items-center h-100">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+          <div class="card bg-dark text-white" style="border-radius: 1rem;">
+            <div class="card-body p-5 text-center">
+
+              <div class="mb-md-5 mt-md-4 pb-5">
+
+                <h2 class="fw-bold mb-2 text-uppercase">Admin LOGIN</h2>
+                <p class="text-white-50 mb-5"></p>
+
+                <form action="/admin/dashboard" method="POST">
+                  <% if(typeof message !=='undefined' ) { %>
+                    <p style="color: red;">
+                      <%= message %>
+                    </p>
+                    <% } %>
+                      <div data-mdb-input-init class="form-outline form-white mb-4">
+                        <input type="email" id="typeEmailX" class="form-control form-control-lg" name="email"
+                          placeholder="email" />
+                      </div>
+                      <p class="text-white-50 mb-5"></p>
+
+                      <div data-mdb-input-init class="form-outline form-white mb-4">
+                        <input type="password" id="typePasswordX" class="form-control form-control-lg" name="password"
+                          placeholder="password" />
+                      </div>
+                      <p class="text-white-50 mb-5"></p>
+
+
+                      <button data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-light btn-lg px-5"
+                        type="submit">Login</button>
+                </form>
+
+
+              </div>
+
+
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Link to Bootstrap Bundle with Popper -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.1.0/mdb.min.js"></script>
+</body>
+
+</html>

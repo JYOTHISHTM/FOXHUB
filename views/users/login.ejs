@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Login Page</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" crossorigin="anonymous" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.6.0/mdb.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      max-width: 900px;
+      overflow: hidden;
+    }
+
+    .left-panel {
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .left-panel img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+
+    .right-panel {
+      padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .right-panel h3 {
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    .right-panel p {
+      color: #6c757d;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-outline {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-outline input {
+      padding-left: 2.5rem;
+      border-radius: 5px;
+      border: 1px solid #ced4da;
+      width: 100%;
+      height: 45px;
+    }
+
+    .form-outline i {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      color: #0c0c0d;
+    }
+
+    .form-outline input::placeholder {
+      color: #adb5bd;
+    }
+
+    .btn-custom {
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      height: 45px;
+      width: 100%;
+      transition: background-color 0.3s ease;
+      font-size: 16px;
+      margin-top: 1rem;
+    }
+
+    .btn-custom:hover {
+      background-color: #ee5253;
+    }
+
+    .text-link {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .text-link:hover {
+      text-decoration: underline;
+    }
+
+    .social-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .social-buttons a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      border: 1px solid #ced4da;
+      color: #495057;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .social-buttons a:hover {
+      background-color: #f8f9fa;
+      color: #212529;
+    }
+
+    .success-message {
+      color: #28a745;
+      font-size: 14px;
+      margin-bottom: 1rem;
+    }
+
+    .error-message {
+      color: #dc3545 !important;
+      font-size: 14px;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="left-panel">
+    <img src="/uploads/360_F_121818673_6EID5iF76VCCc4aGOLJkd94Phnggre3o-Photoroom.png" alt="Illustration" style="width: 60%;">
+  </div>
+  <div class="right-panel">
+    <h3 class="fw-bold text-uppercase">LOGIN</h3>
+    <form action="/login" method="post">
+      <% if (typeof message !== 'undefined') { %>
+        <% if (message === 'Account verified successfully') { %>
+          <p class="success-message"><%= message %></p>
+        <% } else { %>
+          <p class="error-message"><%= message %></p>
+        <% } %>
+      <% } else if (typeof resetSuccess !== 'undefined' && resetSuccess === 'true') { %>
+        <p class="success-message">Password modified successfully</p>
+      <% } %>
+
+      <div class="form-outline">
+        <input type="text" name="email" class="form-control" placeholder="Enter username" />
+      </div>
+
+      <div class="form-outline">
+        <input type="password" name="password" class="form-control" placeholder="Password" />
+      </div>
+
+      <a href="/forgot-password" class="text-link">Recovery Password</a>
+
+      <button class="btn btn-custom" type="submit">Sign In</button>
+    </form>
+
+    <div class="social-buttons">
+      <a href="/auth"><i class="fab fa-google"></i></a>
+    </div>
+
+    <p class="mt-3">Not a member? <a href="/signUp" class="text-link">Register now</a></p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.6.0/mdb.min.js"></script>
+
+</body>
+</html>

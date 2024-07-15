@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmed</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Russo One', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a, #111011);
+      color: #fff;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2em;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .order-details {
+      font-size: 1.2em;
+      margin-bottom: 1em;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1em;
+      border-radius: 10px;
+    }
+
+    .button-container {
+      margin-top: 1em;
+      display: flex;
+      justify-content: center;
+      gap: 1em;
+    }
+
+    button {
+      background: #fff;
+      color: #6d5eac;
+      border: none;
+      padding: 0.5em 1em;
+      font-size: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    button:hover {
+      background: #6d5eac;
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    .coupon-info {
+      margin-top: 1em;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1em;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>ORDER CONFIRMED!</h1>
+    <div class="order-details" style="color: green;">
+      Your order has been successfully placed! Thank you for shopping with us.
+    </div>
+    <p>Order ID: <%= order._id %></p>
+    <div class="button-container">
+      <button onclick="location.href='/shop'">SHOP MORE</button>
+      <button onclick="location.href='/userOrders'">MY ORDERS</button>
+    </div>
+
+    <% if (coupon) { %>
+      <div class="coupon-info">
+        <h2>You've earned a coupon!</h2>
+      </div>
+    <% } %>
+    
+
+  </div>
+
+  <!-- Fireworks animation script -->
+  <div class="fireworks" id="fireworks"></div>
+
+  <script>
+    function createFirework() {
+      const firework = document.createElement('div');
+      firework.className = 'firework';
+      firework.style.left = Math.random() * 100 + 'vw';
+      firework.style.top = Math.random() * 100 + 'vh';
+      firework.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+      firework.style.setProperty('--ty', (Math.random() * 200 - 100) + 'px');
+      firework.style.setProperty('--tz', (Math.random() * 200 - 100) + 'px');
+      document.getElementById('fireworks').appendChild(firework);
+      setTimeout(() => {
+        firework.remove();
+      }, 1000);
+    }
+
+    setInterval(createFirework, 300);
+  </script>
+</body>
+
+</html>

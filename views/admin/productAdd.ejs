@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add New Product</title>
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .form-container h2 {
+            text-align: center;
+        }
+
+        .form-container label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        .form-container input,
+        .form-container select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-container button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .form-container p {
+            text-align: center;
+            color: red;
+        }
+
+        .error {
+            color: red;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .cropper-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            max-width: 100%;
+        }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.css">
+</head>
+<body>
+    <div class="form-container">
+        <h2>Add New Product</h2>
+        <form id="productAddForm" action="/admin/add-product" method="POST" enctype="multipart/form-data" onsubmit="return validateAddForm()">
+            <% if (typeof message !== 'undefined') { %>
+                <p style="color: red;"><%= message %></p>
+            <% } %>
+    
+            <label for="product-name">Product Name:</label>
+            <input type="text" id="product-name" name="name" placeholder="Enter product name" required>
+            <span id="nameError" class="error"></span>
+    
+            <label for="product-price">Price:</label>
+            <input type="number" id="product-price" name="price" step="0.01" placeholder="Enter product price" required>
+            <span id="priceError" class="error"></span>
+    
+            <label for="product-quantity">Quantity:</label>
+            <input type="number" id="product-quantity" name="quantity" placeholder="Enter product quantity" required>
+            <span id="quantityError" class="error"></span>
+    
+            <label for="product-image1">Product Image 1:</label>
+            <input type="file" id="product-image1" name="image1" accept="image/*" onchange="openCropModal(this, 1)" required>
+            <span id="image1Error" class="error"></span>
+    
+            <label for="product-image2">Product Image 2:</label>
+            <input type="file" id="product-image2" name="image2" accept="image/*" onchange="openCropModal(this, 2)" required>
+            <span id="image2Error" class="error"></span>
+    
+            <label for="product-image3">Product Image 3:</label>
+            <input type="file" id="product-image3" name="image3" accept="image/*" onchange="openCropModal(this, 3)" required>
+            <span id="image3Error" class="error"></span>
+    
+            <label for="product-image4">Product Image 4:</label>
+            <input type="file" id="product-image4" name="image4" accept="image/*" onchange="openCropModal(this, 4)" required>
+            <span id="image4Error" class="error"></span>
+    
+            <label for="product-image5">Product Image 5:</label>
+            <input type="file" id="product-image5" name="image5" accept="image/*" onchange="openCropModal(this, 5)" required>
+            <span id="image5Error" class="error"></span>
+    
+            <label for="product-category">Category:</label>
+            <select id="product-category" name="category" required>
+                <% categoryData.forEach((item) => { %>
+                    <option value="<%= item._id %>"><%= item.name %></option>
+                <% }) %>
+            </select>
+            <span id="categoryError" class="error"></span>
+    
+            <button type="submit">Add Product</button>
+        </form>
+    </div>
+    
+    <div id="crop-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="cropper-container">
+                <img id="crop-image" src="" alt="Image for cropping">
+            </div>
+            <button id="crop-button">Crop</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/cropperjs"></script>
+    <script>
+        let cropper;
+        let currentImageInput;
+
+        function openCropModal(input, imageId) {
+            currentImageInput = input;
+            const file = input.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const cropImage = document.getElementById('crop-image');
+                    cropImage.src = e.target.result;
+                    document.getElementById('crop-modal').style.display = 'block';
+
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 1,
+                        viewMode: 1
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function closeCropModal() {
+            document.getElementById('crop-modal').style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+            }
+        }
+
+        document.querySelector('.close').addEventListener('click', closeCropModal);
+
+        document.getElementById('crop-button').addEventListener('click', () => {
+            const canvas = cropper.getCroppedCanvas();
+            canvas.toBlob(blob => {
+                const file = new File([blob], currentImageInput.files[0].name, { type: 'image/jpeg' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                currentImageInput.files = dataTransfer.files;
+                closeCropModal();
+            });
+        });
+
+        function validateAddForm() {
+            let isValid = true;
+    
+            // Clear previous errors
+            document.querySelectorAll('.error').forEach(el => el.innerHTML = '');
+    
+            // Validate name (no leading white spaces)
+            const name = document.getElementById('product-name').value.trim();
+            if (!name || /^\s/.test(name)) {
+                document.getElementById('nameError').innerHTML = 'Product name is required and cannot start with white spaces';
+                isValid = false;
+            }
+    
+            // Validate price
+            const price = document.getElementById('product-price').value.trim();
+            if (!price || isNaN(price) || price <= 0) {
+                document.getElementById('priceError').innerHTML = 'Valid price is required';
+                isValid = false;
+            }
+    
+            // Validate quantity (cannot be negative)
+            const quantity = document.getElementById('product-quantity').value.trim();
+            if (!quantity || isNaN(quantity) || quantity <= 0) {
+                document.getElementById('quantityError').innerHTML = 'Valid quantity is required and cannot be negative';
+                isValid = false;
+            }
+    
+            // Validate images (only image files)
+            for (let i = 1; i <= 5; i++) {
+                const imageInput = document.getElementById(`product-image${i}`);
+                if (imageInput.files.length === 0) {
+                    document.getElementById(`image${i}Error`).innerHTML = 'Image is required';
+                    isValid = false;
+                } else {
+                    const file = imageInput.files[0];
+                    if (!file.type.startsWith('image/')) {
+                        document.getElementById(`image${i}Error`).innerHTML = 'Only image files are allowed';
+                        isValid = false;
+                    }
+                }
+            }
+    
+            return isValid;
+        }
+    </script>
+</body>
+</html>

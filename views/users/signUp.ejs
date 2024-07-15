@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up Form</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.6.0/mdb.min.css" rel="stylesheet"/>
+
+<style>
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        display: flex;
+        width: 80%;
+        max-width: 800px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: #ffffff;
+    }
+
+    .left {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+    }
+
+    .left img {
+        width: 70%;
+        max-width: 350px;
+    }
+
+    .right {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .right h3 {
+        margin-bottom: 10px;
+        font-size: 24px;
+        color: #333;
+    }
+
+    .right p {
+        margin-bottom: 20px;
+        color: #666;
+    }
+
+    .form-outline {
+        margin-bottom: 15px;
+    }
+
+    .form-outline input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+    }
+
+    .btn {
+        margin-top: 15px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #ee5253;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: #ee5253;
+    }
+
+    .error {
+        color: red;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+    .signin-link {
+        margin-top: 10px;
+    }
+
+    .signin-link a {
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .signin-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left">
+        <img src="/uploads/360_F_121818673_6EID5iF76VCCc4aGOLJkd94Phnggre3o-Photoroom.png" alt="Sign Up Image" />
+    </div>
+    <div class="right">
+        <h3 class="fw-bold text-uppercase">Sign Up</h3>
+
+        <form action="/register" method="post" id="signupForm">
+            <div class="form-outline">
+                <input type="text" id="name" name="name" placeholder="Name" />
+                <span id="nameError" class="error"></span>
+            </div>
+            <div class="form-outline">
+                <input type="email" id="email" name="email" placeholder="Email" />
+                <span id="emailError" class="error"></span>
+            </div>
+            <div class="form-outline">
+                <input type="tel" id="mobile" name="mobile" placeholder="Mobile Number" />
+                <span id="mobileError" class="error"></span>
+            </div>
+            <div class="form-outline">
+                <input type="password" id="password" name="password" placeholder="Password" />
+                <span id="passwordError" class="error"></span>
+            </div>
+            <div class="form-outline">
+                <input type="password" id="confirmPassword" name="password2" placeholder="Confirm Password" />
+                <span id="confirmPasswordError" class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="referred_code">Referral Code (Optional)</label>
+                <input type="text" class="form-control" id="referred_code" name="referred_code" >
+                <div class="error" id="referred_code-error"></div>
+            </div>
+
+
+            <button class="btn" type="submit">Sign Up</button>
+        </form>
+
+        <div class="signin-link">
+            <p>Already have an account? <a href="/login" class="text-primary fw-bold">Login</a></p>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.getElementById('signupForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        if (validateForm()) {
+            var formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                mobile: document.getElementById('mobile').value,
+                password: document.getElementById('password').value,
+                password2: document.getElementById('confirmPassword').value,
+                referred_code :document.getElementById('referred_code').value
+            };
+
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/otpVerify?userId=' + data.userId;
+                } else {
+                    if (data.errors) {
+                        for (const [key, value] of Object.entries(data.errors)) {
+                            document.getElementById(key + 'Error').textContent = value;
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
+
+    function validateForm() {
+        var name = document.getElementById("name").value;
+        var email = document.getElementById("email").value;
+        var mobile = document.getElementById("mobile").value;
+        var password = document.getElementById("password").value;
+        var confirmPassword = document.getElementById("confirmPassword").value;
+        var mobilePattern = /^\d{10}$/;
+        var isValid = true;
+
+        document.getElementById("nameError").textContent = "";
+        document.getElementById("emailError").textContent = "";
+        document.getElementById("mobileError").textContent = "";
+        document.getElementById("passwordError").textContent = "";
+        document.getElementById("confirmPasswordError").textContent = "";
+
+        if (!name.trim()) {
+            document.getElementById("nameError").textContent = "Name must be filled out";
+            isValid = false;
+        }
+        if (!email.trim()) {
+            document.getElementById("emailError").textContent = "Email must be filled out";
+            isValid = false;
+        }
+        if (!mobilePattern.test(mobile)) {
+            document.getElementById("mobileError").textContent = "Mobile number must be 10 digits";
+            isValid = false;
+        }
+        if (password.trim() === "") {
+            document.getElementById("passwordError").textContent = "Password must be filled out";
+            isValid = false;
+        }
+        if (password !== confirmPassword) {
+            document.getElementById("confirmPasswordError").textContent = "Passwords do not match";
+            isValid = false;
+        }
+        return isValid;
+    }
+</script>
+
+</body>
+</html>

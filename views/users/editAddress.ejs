@@ -1,0 +1,67 @@
+<%- include('../layouts/header.ejs') %>
+<%- include('../layouts/navbar.ejs') %>
+
+
+<div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg'); padding-top: 100px;">
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Address</span></p>
+        <h1 class="mb-0 bread">My ADDRESS</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container my-5 d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="row w-100" style="    margin-left: 105px;
+  ">
+    <div class="col-md-3"></div>
+
+<div class="content">
+  <div class="container">
+    <form action="/updateAddress" method="POST" class="billing-form">
+      <input type="hidden" name="id" value="<%= address._id %>">
+      <div class="row align-items-end">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="state">State</label>
+            <input style="  color: rgb(8 8 8) !important;
+            " type="text" class="form-control" name="state" value="<%= address.state %>">
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="address">Street Address</label>
+            <input  style="  color: rgb(8 8 8) !important;
+            " type="text" class="form-control" name="address" value="<%= address.address %>">
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="city">Town / City</label>
+            <input style="  color: rgb(8 8 8) !important;
+            "  type="text" class="form-control" name="city" value="<%= address.city %>">
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="postalCode">Postcode / ZIP *</label>
+            <input  style="  color: rgb(8 8 8) !important;
+            " type="text" class="form-control" name="postalCode" value="<%= address.postalCode %>">
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-success">Update Address</button>
+    </form>
+  </div>
+</div>
+
+<div class="col-md-3"></div>
+</div>
+</div>
+
+<%- include('../layouts/footer.ejs') %>

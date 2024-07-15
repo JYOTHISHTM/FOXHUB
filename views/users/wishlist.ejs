@@ -1,0 +1,139 @@
+<%- include('../layouts/header.ejs') %>
+<%- include('../layouts/navbar.ejs') %>
+<style>
+  .table tbody tr td {
+    padding: 20px 10px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05) !important;
+  }
+  .buttons {
+    width: 60%;
+    border-radius: 7%;
+  }
+  .ftco-cart button, .ftco-cart .form-control {
+    height: 40px !important;
+  }
+  /* Reduce width of image column */
+  .image-column {
+    width: 10%; /* Adjust the width as needed */
+  }
+</style>
+<div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Wishlist</span></p>
+        <h1 class="mb-0 bread">Wishlist</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<section class="ftco-section ftco-cart">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12 ftco-animate">
+        <div class="wish-list">
+          <% if (wishlist.length === 0) { %>
+            <h2>Your wishlist is empty</h2>
+          <% } else { %>
+            <div class="table-responsive">
+              <table class="table">
+                <thead class="thead-dark">
+                  <tr>
+                    <th scope="col">Product Name</th>
+                    <th scope="col" class="image-column">Image</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="wishlist-table">
+                  <% wishlist.forEach(function(product) { %>
+                    <tr id="product-<%= product._id %>">
+                      <td><%= product.name %></td>
+                      <td><img style="width: 100%;" src="/productImage/<%= product.images[0] %>" alt="<%= product.name %>"></td>
+                      <td><%= product.finalPrice.toFixed(2) %></td>
+                      <td class="<%= product.quantity !== 0 ? 'text-success' : 'text-danger' %>">
+                        <%= product.quantity !== 0 ? 'In Stock' : 'Out of Stock' %>
+                      </td>
+                      <td class="text-center">
+                        <button class="btn btn-danger buttons" onclick="removeFromWishlist('<%= product._id %>')">Remove</button>
+                      </td>
+                      <td class="text-center">
+                        <button class="btn btn-primary buttons" onclick="addToCartFromWishlist('<%= product._id %>', '<%= product.name %>', '<%= product.images[0] %>')" <%= product.quantity === 0 ? 'disabled' : '' %>>Add to Cart</button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  // Configure Toastr options
+  toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": false,
+    "progressBar": true,
+    "positionClass": "toast-top-right",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut"
+  };
+
+  // Function to remove from wishlist
+  function removeFromWishlist(productId) {
+    $.ajax({
+      url: '/remove-from-wishlist',
+      type: 'POST',
+      data: { userId: '<%= userId %>', productId: productId },
+      success: function(response) {
+        toastr.warning('Product removed from wishlist successfully.');
+        $('#product-' + productId).remove();
+      },
+      error: function(error) {
+        console.error('Error:', error);
+      }
+    });
+  }
+
+  // Function to add to cart from wishlist
+  function addToCartFromWishlist(productId, productName, productImage) {
+    $.ajax({
+      url: '/add-to-cart-from-wishlist',
+      type: 'POST',
+      data: {
+        productId: productId,
+        productName: productName,
+        productImage: productImage
+      },
+      success: function(response) {
+        toastr.success('Product added to cart successfully.');
+        $('#product-' + productId).remove();
+      },
+      error: function(error) {
+        console.error('Error:', error);
+      }
+    });
+  }
+</script>
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<%- include('../layouts/footer.ejs') %>

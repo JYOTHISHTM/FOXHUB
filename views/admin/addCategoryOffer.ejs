@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Category Offer</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .container-fluid {
+      margin-top: 50px;
+    }
+    .card {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      transition: 0.3s;
+      border-radius: 10px;
+      width: 40%;
+      margin-left: 31%;
+    }
+    .card:hover {
+      box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    }
+    .card-header {
+      background-color: #007bff;
+      color: #fff;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+    }
+    .btn-primary:hover {
+      background-color: #0069d9;
+      border-color: #0062cc;
+    }
+  </style>
+</head>
+
+
+<body>
+  <div class="container-fluid">
+      <div class="card">
+          <div class="card-header">
+              <h2>Add Category Offer</h2>
+          </div>
+          <div class="card-body">
+              <form action="/admin/addCategoryOffer" method="POST">
+                  <div class="form-group">
+                      <label for="category">Select Category</label>
+                      <select class="form-control" id="category" name="category" required>
+                          <option value="">Select a category</option>
+                          <% categories.forEach(category => { %>
+                              <option value="<%= category._id %>" <%= (formData && formData.category === category._id.toString()) ? 'selected' : '' %>><%= category.name %></option>
+                          <% }); %>
+                      </select>
+                      <% if (errors && errors.category) { %>
+                          <small class="text-danger"><%= errors.category %></small>
+                      <% } %>
+                  </div>
+                  <div class="form-group">
+                      <label for="discountPercentage">Discount Percentage</label>
+                      <input type="number" class="form-control" id="discountPercentage" name="discountPercentage" min="1" max="100" placeholder="Enter discount percentage" value="<%= formData ? formData.discountPercentage : '' %>" required>
+                      <% if (errors && errors.discountPercentage) { %>
+                          <small class="text-danger"><%= errors.discountPercentage %></small>
+                      <% } %>
+                  </div>
+                  <div class="form-group">
+                      <label for="startDate">Start Date</label>
+                      <input type="date" class="form-control" id="startDate" name="startDate" value="<%= formData ? formData.startDate : '' %>" required>
+                      <% if (errors && errors.startDate) { %>
+                          <small class="text-danger"><%= errors.startDate %></small>
+                      <% } %>
+                  </div>
+                  <div class="form-group">
+                      <label for="endDate">End Date</label>
+                      <input type="date" class="form-control" id="endDate" name="endDate" value="<%= formData ? formData.endDate : '' %>" required>
+                      <% if (errors && errors.endDate) { %>
+                          <small class="text-danger"><%= errors.endDate %></small>
+                      <% } %>
+                  </div>
+                  <button type="submit" class="btn btn-success">Add Offer</button>
+              </form>
+          </div>
+      </div>
+  </div>
+</body>
+
+
+
+
+</html>
+

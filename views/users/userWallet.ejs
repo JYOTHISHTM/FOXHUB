@@ -1,0 +1,273 @@
+<%- include('../layouts/header.ejs') %>
+<%- include('../layouts/navbar.ejs') %>
+
+
+<style>
+  .btn.add-money {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+    width: 15%;
+    border-radius: 5px;
+  }
+  .text-success {
+    color: #28a745 !important;
+  }
+  .text-danger {
+    color: #dc3545 !important;
+  }
+  .button-container {
+    text-align: right;
+    margin-bottom: 20px;
+  }
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .table th, .table td {
+    padding: 8px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+  .table-container {
+    max-height: 450px;
+    overflow-y: auto;
+    
+  }
+ 
+</style>
+<link rel="stylesheet" href="/css/sidebar.css">
+
+<div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Wallet</span></p>
+        <h1 class="mb-0 bread">My WALLET</h1>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../profileLayouts/sideBar.ejs') %>
+
+<div class="container my-5 d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="row w-100">
+    <div class="col-md-3"></div>
+
+    <div class="col-md-9">
+      <div class="cart-list ftco-animate p-4 bg-white rounded" style="margin-top: -80%; margin-right: -13%; margin-left: -28%; ">
+        <h3>Wallet Balance: <strong id="walletBalance"><%= wallet.balance.toFixed(2) %></strong></h3>
+        <div class="button-container mb-4 text-right">
+          <button class="btn add-money" onclick="addMoney()">Add Money</button>
+        </div>
+    
+        <% if (wallet.transactions.length === 0) { %>
+          <p class="text-center">Your wallet is empty.</p>
+        <% } else { %>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Transaction Type</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="transactionTable">
+                <% wallet.transactions.reverse().forEach(transaction => { %> <!-- Reverse the transactions array -->
+                  <tr>
+                    <td class="<%= transaction.transactionMethod === 'Credit' || transaction.transactionMethod === 'Refund' ? 'text-success' : 'text-danger' %>">
+                      <%= transaction.transactionMethod %>
+                    </td>
+                    <td><%= new Date(transaction.date).toLocaleDateString() %></td>
+                    <td class="<%= transaction.transactionMethod === 'Credit' || transaction.transactionMethod === 'Refund' ? 'text-success' : 'text-danger' %>">
+                      <%= transaction.transactionMethod === 'Credit' || transaction.transactionMethod === 'Refund' ? `+${transaction.amount.toFixed(2)}` : `-${transaction.amount.toFixed(2)}` %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+              
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    
+
+    <div class="col-md-3"></div>
+  </div>
+</div>
+
+
+<%- include('../layouts/footer.ejs') %>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+
+
+<script>
+  const userId = '<%= userId %>'; // Replace with the actual user ID dynamically
+
+  async function addMoney() {
+    const amount = parseFloat(prompt('Enter the amount to add:'));
+    if (!isNaN(amount) && amount > 0) {
+      try {
+        const response = await fetch('/addMoney', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userId, amount })
+        });
+        const data = await response.json();
+        if (data.success) {
+          updateWalletBalance(data.wallet.balance);
+          addTransactionToTable(amount, 'Credit', data.wallet.transactions[0].date);
+          Swal.fire('Success', 'Money added successfully', 'success');
+        } else {
+          Swal.fire('Error', data.message || 'Error adding money', 'error');
+        }
+      } catch (error) {
+        console.error('Error adding money:', error);
+        Swal.fire('Error', 'An error occurred while adding money', 'error');
+      }
+    } else {
+      Swal.fire('Invalid Amount', 'Please enter a valid amount greater than 0', 'error');
+    }
+  }
+
+  function updateWalletBalance(newBalance) {
+    const balanceElement = document.getElementById('walletBalance');
+    balanceElement.innerText = `${newBalance.toFixed(2)}`;
+  }
+
+  function addTransactionToTable(amount, transactionMethod, date) {
+    const table = document.getElementById('transactionTable');
+    const newRow = table.insertRow(0);
+
+    const transactionTypeCell = newRow.insertCell(0);
+    const dateCell = newRow.insertCell(1);
+    const amountCell = newRow.insertCell(2);
+
+    transactionTypeCell.innerHTML = `<span class="${transactionMethod === 'Credit' ? 'text-success' : 'text-danger'}">${transactionMethod}</span>`;
+    dateCell.innerText = new Date(date).toLocaleDateString();
+    amountCell.innerHTML = `<span class="${transactionMethod === 'Credit' ? 'text-success' : 'text-danger'}">${transactionMethod === 'Credit' ? `${amount.toFixed(2)}` : `-${amount.toFixed(2)}`}</span>`;
+
+    newRow.className = 'text-center';
+  }
+
+
+  async function checkWalletBalanceAndSubmitForm(amount) {
+  try {
+    const response = await fetch('/check-wallet-balance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    });
+    const data = await response.json();
+    console.log("Wallet Balance Check Response:", data);
+
+    if (response.ok) {
+      if (data.sufficientBalance) {
+        await deductFromWalletAndSubmitForm(amount);
+      } else {
+        toastr.error('Insufficient balance in your wallet. Please choose another payment method.');
+      }
+    } else {
+      throw new Error(data.message || 'Error checking wallet balance');
+    }
+  } catch (error) {
+    console.error('Error checking wallet balance:', error);
+    toastr.error(`An error occurred while checking the wallet balance: ${error.message}. Please try again later.`);
+  }
+}
+
+async function deductFromWalletAndSubmitForm(amount) {
+  try {
+    const response = await fetch('/deduct-from-wallet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    });
+    const data = await response.json();
+    console.log("Deduct From Wallet Response:", data);
+
+    if (response.ok && data.success) {
+      toastr.success('Payment successful! Proceeding with order placement.');
+      document.getElementById('paymentForm').submit();
+    } else {
+      throw new Error(data.message || 'Error deducting amount from wallet');
+    }
+  } catch (error) {
+    console.error('Error deducting amount from wallet:', error);
+    toastr.error(`Error deducting amount from wallet: ${error.message}. Please try again.`);
+  }
+}
+
+
+
+  async function placeOrder(event) {
+    event.preventDefault();
+
+    const response = await fetch('/place-order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        state: document.getElementById('state').value,
+        address: document.getElementById('address').value,
+        city: document.getElementById('city').value,
+        postalCode: document.getElementById('postalCode').value,
+        paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
+        couponCode: document.getElementById('couponCode').value
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      window.location.href = '/thankyou';
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: data.message || 'Failed to place order. Please try again.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
+  }
+
+  document.getElementById('checkoutForm').addEventListener('submit', placeOrder);
+</script>
+
+

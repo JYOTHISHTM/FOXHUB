@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Category</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .form-container {
+            max-width: 500px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-container label {
+            display: block;
+            font-weight: bold;
+            color: #444;
+            margin-top: 10px;
+        }
+
+        .form-container input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .form-container button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .form-container button:hover {
+            background-color: #218838;
+        }
+
+        .form-container .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+
+<!-- edit category -->
+<body>
+    <div class="form-container">
+        <h2>Update Category</h2>
+        <form id="updateCategoryForm" action="/admin/update" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="<%= categoryData._id %>">
+            <div>
+                <label for="category-name">Category Name:</label>
+                <input type="text" id="category-name" name="name" value="<%= categoryData.name %>" required>
+                <div id="name-error" class="error-message"></div>
+            </div>
+            <div>
+                <label for="category-image">Category Image:</label>
+                <input type="file" id="category-image" name="image" accept="image/*">
+                <div id="image-error" class="error-message"></div>
+            </div>
+            <button type="submit" class="btn btn-success">Update Category</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('updateCategoryForm').addEventListener('submit', (event) => {
+                let isValid = true;
+
+                const nameInput = document.getElementById('category-name');
+                const nameError = document.getElementById('name-error');
+                const name = nameInput.value.trim();
+                if (name === '') {
+                    nameError.textContent = 'Category name cannot be empty or only white spaces';
+                    isValid = false;
+                } else {
+                    nameError.textContent = '';
+                }
+
+                const imageInput = document.getElementById('category-image');
+                const imageError = document.getElementById('image-error');
+                const file = imageInput.files[0];
+                if (file && !file.type.startsWith('image/')) {
+                    imageError.textContent = 'Please select a valid image file';
+                    imageInput.value = ''; // Clear the input
+                    isValid = false;
+                } else {
+                    imageError.textContent = '';
+                }
+
+                if (!isValid) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+
+
+
+</html>
+

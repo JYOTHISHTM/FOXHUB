@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Logout Confirmation</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    .custom-card {
+
+      padding: 69px;
+      width: 477px;
+      height: 300px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .centered-container {
+      padding: 20px;
+      /* Adding padding to the container */
+    }
+
+    .card-title {
+      width: 105%;
+      margin-bottom: 2.75rem;
+    }
+
+    .mt-3,
+    .my-3 {
+      margin-top: 3.5rem !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="d-flex justify-content-center align-items-center vh-100 centered-container">
+    <div class="card custom-card">
+      <div class="card-body text-center">
+        <h5 class="card-title">Are You Sure You Want to Logout?</h5>
+        <div class="d-flex justify-content-around mt-3">
+          <!-- Cancel button -->
+          <a href="/admin/dashboard" class="btn btn-secondary" role="button">Cancel</a>
+          <!-- Logout button -->
+          <a href="/admin" class="btn btn-danger" role="button">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

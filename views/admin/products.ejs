@@ -1,0 +1,209 @@
+<%- include('../adminLayouts/header.ejs') %>
+<%- include('../adminLayouts/sidenavbar.ejs') %>
+<style>
+.product-image {
+    width: 100px; /* Adjust width as needed */
+    height: auto; /* Maintain aspect ratio */
+    border: 1px solid #ddd; /* Optional border */
+    padding: 5px; /* Optional padding */
+}
+</style>
+<div class="body-wrapper">
+    <header class="app-header">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <ul class="navbar-nav">
+                <li class="nav-item d-block d-xl-none">
+                    <a class="nav-link sidebartoggler nav-icon-hover" id="headerCollapse" href="javascript:void(0)">
+                        <i class="ti ti-menu-2"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-icon-hover" href="javascript:void(0)">
+                        <i class="ti ti-bell-ringing"></i>
+                        <div class="notification bg-primary rounded-circle"></div>
+                    </a>
+                </li>
+            </ul>
+            <div class="navbar-collapse justify-content-end px-0" id="navbarNav">
+                <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-end">
+                    <a href="https://adminmart.com/product/modernize-free-bootstrap-admin-dashboard/" target="_blank" class="btn btn-primary">Download Free</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link nav-icon-hover" href="javascript:void(0)" id="drop2" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="/adminAssets/images/profile/user-1.jpg" alt="" width="35" height="35" class="rounded-circle">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop2">
+                            <div class="message-body">
+                                <a href="javascript:void(0)" class="d-flex align-items-center gap-2 dropdown-item">
+                                    <i class="ti ti-user fs-6"></i>
+                                    <p class="mb-0 fs-3">My Profile</p>
+                                </a>
+                                <a href="javascript:void(0)" class="d-flex align-items-center gap-2 dropdown-item">
+                                    <i class="ti ti-mail fs-6"></i>
+                                    <p class="mb-0 fs-3">My Account</p>
+                                </a>
+                                <a href="javascript:void(0)" class="d-flex align-items-center gap-2 dropdown-item">
+                                    <i class="ti ti-list-check fs-6"></i>
+                                    <p class="mb-0 fs-3">My Task</p>
+                                </a>
+                                <a href="./authentication-login.html" class="btn btn-outline-primary mx-3 mt-2 d-block">Logout</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+
+
+    <div class="container-fluid">
+        <div class="card">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>Product Details</h2>
+                <a href="ProductAdd" class="btn btn-success">Add Product</a>
+            </div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">No</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Image</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% Products.forEach((product, index) => { %>
+                    <tr>
+                        <th scope="row"><%= index + 1 %></th>
+                        <td><%= product.name %></td>
+                        <td><%= product.price %></td>
+                        <td><%= product.quantity %></td>
+                        <td>
+                            <img src="/productImage/<%= product.images[0] %>" alt="product Image" class="product-image" />
+                        </td>
+                        <td><%= product.category?.name || 'N/A' %></td>
+                        <td class="action-buttons">
+                            <a href="/admin/editproduct?id=<%= product._id %>" class="btn btn-success">EDIT</a>
+                            <div class="btn-group" role="group">
+                                <% if (product.is_blocked) { %>
+                                <button onclick="handleUnblock('<%= product._id %>')" id="unblockButton-<%= product._id %>" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="top" title="Unblock User">
+                                    Unblock
+                                </button>
+                                <% } else { %>
+                                <button onclick="handleBlock('<%= product._id %>')" id="blockButton-<%= product._id %>" class="btn btn-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="Block User">
+                                    Block
+                                </button>
+                                <% } %>
+                            </div>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+
+
+
+</div>
+</main>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+
+
+<script>
+    async function handleBlock(productId) {
+        const confirmation = await confirmAction("block");
+        if (confirmation) {
+            try {
+                const response = await fetch("/admin/productBlock", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ productId }),
+                });
+
+                if (response.ok) {
+                    updateButton(productId, "Unblock", "btn-success", "handleUnblock", "Unblock Product", "unblockButton");
+                    swal("Success", "Product blocked successfully", "success");
+                } else {
+                    const { message } = await response.json();
+                    swal("Error", message || "Failed to block product", "error");
+                    console.error("Failed to block product:", response.status);
+                }
+            } catch (error) {
+                console.error("Error blocking product:", error.message);
+                swal("Error", "An error occurred while blocking the product", "error");
+            }
+        }
+    }
+
+    async function handleUnblock(productId) {
+        const confirmation = await confirmAction("unblock");
+        if (confirmation) {
+            try {
+                const response = await fetch("/admin/productUnblock", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ productId }),
+                });
+
+                if (response.ok) {
+                    updateButton(productId, "Block", "btn-warning", "handleBlock", "Block Product", "blockButton");
+                    swal("Success", "Product unblocked successfully", "success");
+                } else {
+                    const { message } = await response.json();
+                    swal("Error", message || "Failed to unblock product", "error");
+                    console.error("Failed to unblock product:", response.status);
+                }
+            } catch (error) {
+                console.error("Error unblocking product:", error.message);
+                swal("Error", "An error occurred while unblocking the product", "error");
+            }
+        }
+    }
+
+    async function confirmAction(action) {
+        let confirmationText;
+        switch (action) {
+            case "block":
+                confirmationText = "block this product";
+                break;
+            case "unblock":
+                confirmationText = "unblock this product";
+                break;
+            default:
+                confirmationText = "perform this action";
+        }
+
+        return new Promise((resolve) => {
+            swal({
+                title: `Are you sure you want to ${confirmationText}?`,
+                text: "Once confirmed, the action cannot be undone.",
+                icon: "warning",
+                buttons: ["Cancel", "Confirm"],
+                dangerMode: true,
+            }).then((confirmed) => {
+                resolve(confirmed);
+            });
+        });
+    }
+
+    function updateButton(productId, buttonText, buttonClass, onClickFunction, title, buttonIdPrefix) {
+        const button = document.querySelector(`#${buttonIdPrefix}-${productId}`);
+        if (button) {
+            button.textContent = buttonText;
+            button.classList.remove("btn-warning", "btn-success");
+            button.classList.add(buttonClass);
+            button.setAttribute("onclick", `${onClickFunction}('${productId}')`);
+            button.setAttribute("title", title);
+            button.setAttribute("id", `${buttonIdPrefix}-${productId}`);
+        }
+    }
+</script>
+<%- include('../adminLayouts/footer.ejs') %>

@@ -1,0 +1,169 @@
+<%- include('../layouts/header.ejs') %>
+<%- include('../layouts/navbar.ejs') %>
+
+<style>
+  .product {
+    border: 1px solid #e6e6e6;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 30px;
+  }
+
+  .product:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .product .img-prod {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product .img-prod img {
+    width: 100%;
+    transition: transform 0.3s ease;
+  }
+
+  .product .img-prod .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .product .img-prod:hover .overlay {
+    opacity: 1;
+  }
+
+  .product .img-prod:hover img {
+    transform: scale(1.1);
+  }
+
+  .product .text {
+    background: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .product .text h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: "Poppins", Arial, sans-serif;
+    color: #333;
+  }
+
+  .product .text .coupon-code {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #ff6f61;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .product .text .discount {
+    font-size: 18px;
+    color: #82ae46;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .product .text .price-range {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #999;
+  }
+
+  .product .text .copy-btn {
+    background-color: #ff6f61;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 5px;
+    margin-left: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  .product .text .copy-btn:hover {
+    background-color: #e55a50;
+  }
+</style>
+
+<div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Coupon</span></p>
+        <h1 class="mb-0 bread">Your Coupons</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="ftco-section">
+  <div class="container">
+    <div class="row">
+      <% if (coupons && coupons.length > 0) { %>
+        <% coupons.forEach((coupon) => { %>
+          <% const [priceRangeFrom, priceRangeTo] = coupon.priceRange.split(' - '); %>
+          <div class="col-md-6 col-lg-3 ftco-animate">
+            <div class="product">
+              <div class="text py-3 px-3">
+                <h3><%= coupon.title %></h3>
+                <p class="coupon-code">
+                  <span id="coupon-code-<%= coupon._id %>"><%= coupon.code %></span>
+                  <button class="copy-btn" onclick="copyCouponCode('<%= coupon._id %>')">Copy Code</button>
+                </p>
+                <p class="discount"><%= coupon.discountPercentage %>% Off</p>
+                <p class="price-range"><%= priceRangeFrom.replace('$', '') %> to <%= priceRangeTo.replace('$', '') %></p>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="col-12">
+          <p>No coupons available at this time.</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('../layouts/footer.ejs') %>
+<head>
+  <!-- Existing includes -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+
+<script>
+  function copyCouponCode(couponId) {
+    const couponCodeElement = document.getElementById(`coupon-code-${couponId}`);
+    const couponCode = couponCodeElement.textContent;
+    navigator.clipboard.writeText(couponCode).then(() => {
+      Toastify({
+        text: "Coupon code copied to clipboard!",
+        duration: 3000,
+        close: true,
+        gravity: "top",
+        position: "center",
+        backgroundColor: "#4caf50",
+        stopOnFocus: true
+      }).showToast();
+    }).catch(err => {
+      console.error('Failed to copy coupon code: ', err);
+    });
+  }
+</script>

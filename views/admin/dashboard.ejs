@@ -1,0 +1,381 @@
+<%- include('../adminLayouts/header.ejs') %>
+<%- include('../adminLayouts/sidenavbar.ejs') %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Data Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .summary-boxes {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 20px;
+            margin-left: 20%;
+        }
+
+        .summary-box {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            background-color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .summary-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .summary-box h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .summary-box p {
+            font-size: 1.2rem;
+            margin: 0;
+            color: #28a745;
+        }
+
+        .summary-box i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #17a2b8;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #161717;
+            margin-left: 20%;
+        }
+
+        canvas {
+            margin-top: 40px;
+            display: block;
+            box-sizing: border-box;
+            height: 450px !important;
+            width: 80% !important;
+            margin-left: 18%;
+        }
+
+        .timeframe-select {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            margin-left: 10%;
+            width: 100%;
+            margin-top: 40px;
+        }
+
+        .table th,
+        .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table th {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f2f2f2; 
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <h1>Sales Data Dashboard</h1>
+        <div class="timeframe-select">
+            <label for="timeframe">Select Timeframe:</label>
+            <select id="timeframe">
+                <option value="day">Day</option>
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+            </select>
+        </div>
+        <div class="summary-boxes">
+            <div class="summary-box" id="totalSales">
+                <i class="fas fa-dollar-sign"></i>
+                <h2>Total Sales</h2>
+                <p>0.00</p>
+            </div>
+            <div class="summary-box" id="totalReturns">
+                <i class="fas fa-undo-alt"></i>
+                <h2>Total Returns</h2>
+                <p>0.00</p>
+            </div>
+            <div class="summary-box" id="totalCancellations">
+                <i class="fas fa-times-circle"></i>
+                <h2>Total Cancellations</h2>
+                <p>0.00</p>
+            </div>
+        </div>
+        <canvas id="salesChart"></canvas>
+        <div class="table-container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>TOP 5 CATEGORIES</h5>
+                    <table class="table table-striped table-bordered" id="categoriesTable">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Category Name</th>
+                                <th>Sales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5>TOP 5
+                         PRODUCTS</h5>
+                    <table class="table table-striped table-bordered" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Product Name</th>
+                                <th>Sales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+   <script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const timeframeSelect = document.getElementById('timeframe');
+    timeframeSelect.addEventListener('change', function () {
+        fetchAndRenderData(this.value);
+    });
+
+    fetchAndRenderData('day');
+});
+
+async function fetchAndRenderData(timeframe) {
+    try {
+        const salesData = await fetchSalesData(timeframe);
+        if (salesData) {
+            renderSummary(salesData);
+            updateChart(salesData, timeframe);
+            renderTopCategories(salesData.topCategories);
+            renderTopProducts(salesData.topProducts);
+        } else {
+            console.error('Failed to fetch sales data');
+        }
+    } catch (error) {
+        console.error('Error fetching sales data:', error);
+    }
+}
+
+async function fetchSalesData(timeframe) {
+    try {
+        const response = await fetch(`/admin/sales-data?timeframe=${timeframe}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch sales data');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching sales data:', error);
+        return null;
+    }
+}
+
+function renderSummary(data) {
+    const totalSales = data.sales.reduce((acc, val) => acc + val, 0);
+    const totalReturns = data.returns.reduce((acc, val) => acc + val, 0);
+    const totalCancellations = data.cancellations.reduce((acc, val) => acc + val, 0);
+
+    document.getElementById('totalSales').querySelector('p').textContent = `${totalSales.toFixed(2)}`;
+    document.getElementById('totalReturns').querySelector('p').textContent = `${totalReturns.toFixed(2)}`;
+    document.getElementById('totalCancellations').querySelector('p').textContent = `${totalCancellations.toFixed(2)}`;
+}
+
+function updateChart(data, timeframe) {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+
+    if (window.salesChart) {
+        if (window.salesChart instanceof Chart) {
+            window.salesChart.destroy();
+        }
+    }
+
+    // Ensure we have at least the minimum number of data points for each timeframe
+    const { labels, sales, returns, cancellations } = ensureMinimumDataPoints(data, timeframe);
+
+    window.salesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Sales',
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    data: sales
+                },
+                {
+                    label: 'Returns',
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    data: returns
+                },
+                {
+                    label: 'Cancellations',
+                    backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                    data: cancellations
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Quantity'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: getXAxisLabel(timeframe)
+                    }
+                }
+            }
+        }
+    });
+}
+
+function ensureMinimumDataPoints(data, timeframe) {
+    const minDataPoints = {
+        day: 5,
+        week: 4,
+        month: 4,
+        year: 12
+    };
+
+    const requiredPoints = minDataPoints[timeframe];
+    const currentPoints = data.labels.length;
+
+    if (currentPoints >= requiredPoints) {
+        return data;
+    }
+
+    const additionalPoints = requiredPoints - currentPoints;
+    const newLabels = [...Array(additionalPoints).keys()].map(i => getNewLabel(data.labels[0], i + 1, timeframe)).concat(data.labels);
+    const newSales = Array(additionalPoints).fill(0).concat(data.sales);
+    const newReturns = Array(additionalPoints).fill(0).concat(data.returns);
+    const newCancellations = Array(additionalPoints).fill(0).concat(data.cancellations);
+
+    return {
+        labels: newLabels,
+        sales: newSales,
+        returns: newReturns,
+        cancellations: newCancellations
+    };
+}
+
+function getNewLabel(firstLabel, offset, timeframe) {
+    const date = new Date(firstLabel);
+    switch (timeframe) {
+        case 'day':
+            date.setDate(date.getDate() - offset);
+            return date.toLocaleDateString();
+        case 'week':
+            date.setDate(date.getDate() - offset * 7);
+            return `Week ${getWeekNumber(date)}`;
+        case 'month':
+            date.setMonth(date.getMonth() - offset);
+            return date.toLocaleString('default', { month: 'short' });
+        case 'year':
+            date.setFullYear(date.getFullYear() - offset);
+            return date.getFullYear().toString();
+    }
+}
+
+function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+    return weekNo;
+}
+
+function getXAxisLabel(timeframe) {
+    switch (timeframe) {
+        case 'day': return 'Date';
+        case 'week': return 'Week';
+        case 'month': return 'Month';
+        case 'year': return 'Year';
+        default: return '';
+    }
+}
+
+function renderTopCategories(categories) {
+    const categoriesTableBody = document.getElementById('categoriesTable').querySelector('tbody');
+    categoriesTableBody.innerHTML = '';
+    categories.forEach((category, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${category.name}</td>
+            <td>${category.sales}</td>
+        `;
+        categoriesTableBody.appendChild(row);
+    });
+}
+
+function renderTopProducts(products) {
+    const productsTableBody = document.getElementById('productsTable').querySelector('tbody');
+    productsTableBody.innerHTML = '';
+    products.forEach((product, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${product.name}</td>
+            <td>${product.sales}</td>
+        `;
+        productsTableBody.appendChild(row);
+    });
+}
+   </script>
+    
+</body>
+
+</html>

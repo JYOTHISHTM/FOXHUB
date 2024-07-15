@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Product</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0px 4px 8px 0px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        h2 {
+            text-align: center;
+            color: #333333;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 5px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .error-message {
+            color: red;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        .form-container img {
+            width: 100px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <h2>Update Product</h2>
+        <form id="updateProductForm" action="/admin/updateProduct" method="POST" enctype="multipart/form-data" onsubmit="return validateUpdateForm()">
+            <% if (typeof message !== 'undefined') { %>
+                <p class="error-message"><%= message %></p>
+            <% } %>
+            <input type="hidden" name="id" value="<%= productData._id %>">
+            <label for="product-name">Product Name:</label>
+            <input type="text" id="product-name" name="name" value="<%= productData.name %>" placeholder="Enter product name" required>
+            <span id="nameError" class="error-message"></span>
+
+            <label for="product-price">Price:</label>
+            <input type="number" id="product-price" value="<%= productData.price %>" name="price" step="0.01" placeholder="Enter product price" required>
+            <span id="priceError" class="error-message"></span>
+
+            <label for="product-quantity">Quantity:</label>
+            <input type="number" id="product-quantity" value="<%= productData.quantity %>" name="quantity" placeholder="Enter product quantity" required>
+            <span id="quantityError" class="error-message"></span>
+
+            <label for="product-image1">Product Image 1:</label>
+            <input type="file" id="product-image1" name="image1" accept="image/*">
+            <img src="/productImage/<%= productData.images[0] %>" alt="Product Image 1">
+            <span id="image1Error" class="error-message"></span>
+
+            <label for="product-image2">Product Image 2:</label>
+            <input type="file" id="product-image2" name="image2" accept="image/*">
+            <img src="/productImage/<%= productData.images[1] %>" alt="Product Image 2">
+            <span id="image2Error" class="error-message"></span>
+
+            <label for="product-image3">Product Image 3:</label>
+            <input type="file" id="product-image3" name="image3" accept="image/*">
+            <img src="/productImage/<%= productData.images[2] %>" alt="Product Image 3">
+            <span id="image3Error" class="error-message"></span>
+
+            <label for="product-image4">Product Image 4:</label>
+            <input type="file" id="product-image4" name="image4" accept="image/*">
+            <img src="/productImage/<%= productData.images[3] %>" alt="Product Image 4">
+            <span id="image4Error" class="error-message"></span>
+
+            <label for="product-image5">Product Image 5:</label>
+            <input type="file" id="product-image5" name="image5" accept="image/*">
+            <img src="/productImage/<%= productData.images[4] %>" alt="Product Image 5">
+            <span id="image5Error" class="error-message"></span>
+
+            <label for="product-category">Category:</label>
+            <select id="product-category" name="category" required>
+                <% categoryData.forEach((item) => { %>
+                    <option value="<%= item._id %>" <% if (item._id.toString() === productData.category.toString()) { %> selected <% } %>><%= item.name %></option>
+                <% }) %>
+            </select>
+            <span id="categoryError" class="error-message"></span>
+
+            <button type="submit">Update Product</button>
+        </form>
+    </div>
+
+    <script>
+        function validateUpdateForm() {
+            let isValid = true;
+
+            // Clear previous errors
+            document.querySelectorAll('.error-message').forEach(el => el.innerHTML = '');
+
+            // Validate name (no leading white spaces)
+            const name = document.getElementById('product-name').value;
+            const namePattern = /^[^\s]+[\s\S]*$/;
+            if (!name || !namePattern.test(name)) {
+                document.getElementById('nameError').innerHTML = 'Product name is required and cannot start with white spaces';
+                isValid = false;
+            }
+
+            // Validate price
+            const price = document.getElementById('product-price').value.trim();
+            if (!price || isNaN(price) || price <= 0) {
+                document.getElementById('priceError').innerHTML = 'Valid price is required';
+                isValid = false;
+            }
+
+            // Validate quantity (cannot be negative)
+            const quantity = document.getElementById('product-quantity').value.trim();
+            if (!quantity || isNaN(quantity) || quantity <= 0) {
+                document.getElementById('quantityError').innerHTML = 'Valid quantity is required and cannot be negative';
+                isValid = false;
+            }
+
+            // Validate images (only image files)
+            for (let i = 1; i <= 5; i++) {
+                const imageInput = document.getElementById(`product-image${i}`);
+                if (imageInput.files.length > 0) {
+                    const file = imageInput.files[0];
+                    if (!file.type.startsWith('image/')) {
+                        document.getElementById(`image${i}Error`).innerHTML = 'Only image files are allowed';
+                        isValid = false;
+                    }
+                }
+            }
+
+            // Validate category
+            const category = document.getElementById('product-category').value.trim();
+            if (!category) {
+                document.getElementById('categoryError').innerHTML = 'Category is required';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+    </script>
+</body>
+
+
+
+</html>

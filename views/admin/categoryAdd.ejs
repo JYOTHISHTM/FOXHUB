@@ -1,0 +1,115 @@
+<h1>welcome to category page</h1>
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add Category</title>
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .form-container h2 {
+            text-align: center;
+        }
+
+        .form-container label {
+            display: block;
+            margin: 10px 0 5px 0;
+        }
+
+        .form-container input,
+        .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-container button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+
+<!-- category add -->
+<body>
+    <div class="form-container">
+        <h2>Add New Category</h2>
+        <form id="addCategoryForm" action="/admin/add" method="POST" enctype="multipart/form-data">
+            <% if (typeof message !== 'undefined') { %>
+                <p style="color: red;">
+                    <%= message %>
+                </p>
+            <% } %>
+            <div>
+                <label for="category-name">Category Name:</label>
+                <input type="text" id="category-name" name="name" placeholder="Enter category name" required>
+                <div id="name-error" class="error-message"></div>
+            </div>
+            <div>
+                <label for="category-image">Category Image:</label>
+                <input type="file" id="category-image" name="image" accept="image/*" required>
+                <div id="image-error" class="error-message"></div>
+            </div>
+            <button type="submit" class="btn btn-success">Add Category</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('addCategoryForm').addEventListener('submit', (event) => {
+                let isValid = true;
+
+                const nameInput = document.getElementById('category-name');
+                const nameError = document.getElementById('name-error');
+                const name = nameInput.value.trim();
+                if (name === '') {
+                    nameError.textContent = 'Category name cannot be empty or only white spaces';
+                    isValid = false;
+                } else {
+                    nameError.textContent = '';
+                }
+
+                const imageInput = document.getElementById('category-image');
+                const imageError = document.getElementById('image-error');
+                const file = imageInput.files[0];
+                if (file && !file.type.startsWith('image/')) {
+                    imageError.textContent = 'Please select a valid image file';
+                    imageInput.value = ''; // Clear the input
+                    isValid = false;
+                } else {
+                    imageError.textContent = '';
+                }
+
+                if (!isValid) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
+

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Coupon Form</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h2>Coupon Form</h2>
+          </div>
+          <div class="card-body">
+            <form id="couponForm">
+              <div class="form-group">
+                <label for="couponTitle">Coupon Title:</label>
+                <input type="text" class="form-control" id="couponTitle" name="couponTitle" placeholder="Enter coupon title" required>
+                <div id="couponTitleError" class="invalid-feedback"></div>
+              </div>
+              <div class="form-group">
+                <label for="couponCode">Coupon Code:</label>
+                <input type="text" class="form-control" id="couponCode" name="couponCode" placeholder="Enter coupon code" required maxlength="6" pattern="\d*" inputmode="numeric">
+                <div id="couponCodeError" class="invalid-feedback"></div>
+              </div>
+              <div class="form-group">
+                <label for="discountPercentage">Discount Percentage:</label>
+                <input type="number" class="form-control" id="discountPercentage" name="discountPercentage" placeholder="Enter discount percentage" required>
+                <div id="discountPercentageError" class="invalid-feedback"></div>
+              </div>
+              <div class="form-group">
+                <label for="priceRangeFrom">Price Range From:</label>
+                <input type="number" class="form-control" id="priceRangeFrom" name="priceRangeFrom" placeholder="Enter minimum price" required>
+                <div id="priceRangeFromError" class="invalid-feedback"></div>
+              </div>
+              <div class="form-group">
+                <label for="priceRangeTo">Price Range To:</label>
+                <input type="number" class="form-control" id="priceRangeTo" name="priceRangeTo" placeholder="Enter maximum price" required>
+                <div id="priceRangeToError" class="invalid-feedback"></div>
+              </div>
+              <button type="submit" class="btn btn-primary">Save Coupon</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.getElementById('couponForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const couponTitle = document.getElementById('couponTitle').value.trim();
+      const couponCode = document.getElementById('couponCode').value.trim();
+      const discountPercentage = parseInt(document.getElementById('discountPercentage').value);
+      const priceRangeFrom = parseFloat(document.getElementById('priceRangeFrom').value);
+      const priceRangeTo = parseFloat(document.getElementById('priceRangeTo').value);
+
+      let isValid = true;
+
+      // Coupon Title validation
+      if (couponTitle === '') {
+        isValid = false;
+        showError('couponTitle', 'Coupon title is required.');
+      } else {
+        clearError('couponTitle');
+      }
+
+      // Coupon Code validation
+      if (couponCode === '') {
+        isValid = false;
+        showError('couponCode', 'Coupon code is required.');
+      } else if (couponCode.length > 6) {
+        isValid = false;
+        showError('couponCode', 'Coupon code must be 6 characters or less.');
+      } else if (!/^\d+$/.test(couponCode)) {
+        isValid = false;
+        showError('couponCode', 'Coupon code must contain only digits.');
+      } else {
+        clearError('couponCode');
+      }
+
+      // Discount Percentage validation
+      if (isNaN(discountPercentage) || discountPercentage < 1 || discountPercentage > 99) {
+        isValid = false;
+        showError('discountPercentage', 'Discount percentage must be between 1 and 99.');
+      } else {
+        clearError('discountPercentage');
+      }
+
+      // Price Range validation
+      if (isNaN(priceRangeFrom) || priceRangeFrom <= 0) {
+        isValid = false;
+        showError('priceRangeFrom', 'Price range from must be greater than 0.');
+      } else {
+        clearError('priceRangeFrom');
+      }
+
+      if (isNaN(priceRangeTo) || priceRangeTo <= priceRangeFrom) {
+        isValid = false;
+        showError('priceRangeTo', 'Price range to must be larger than price range from.');
+      } else {
+        clearError('priceRangeTo');
+      }
+
+      if (isValid) {
+        try {
+          const response = await fetch('/admin/addCoupon', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ couponTitle, couponCode, discountPercentage, priceRangeFrom, priceRangeTo })
+          });
+
+          if (response.ok) {
+            await Swal.fire({
+              title: 'Success!',
+              text: 'Coupon saved successfully!',
+              icon: 'success',
+              confirmButtonText: 'OK'
+            });
+            window.location.href = '/admin/coupons';
+          } else {
+            const errorData = await response.json();
+            if (errorData.field) {
+              showError(errorData.field, errorData.message);
+            } else {
+              await Swal.fire({
+                title: 'Error!',
+                text: errorData.message || 'Failed to save coupon. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          await Swal.fire({
+            title: 'Error!',
+            text: 'An unexpected error occurred. Please try again later.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        }
+      }
+    });
+
+    function showError(fieldId, message) {
+      const field = document.getElementById(fieldId);
+      const errorElement = document.getElementById(`${fieldId}Error`);
+      field.classList.add('is-invalid');
+      errorElement.textContent = message;
+    }
+
+    function clearError(fieldId) {
+      const field = document.getElementById(fieldId);
+      const errorElement = document.getElementById(`${fieldId}Error`);
+      field.classList.remove('is-invalid');
+      errorElement.textContent = '';
+    }
+  </script>
+</body>
+</html>

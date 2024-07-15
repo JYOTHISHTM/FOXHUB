@@ -1,0 +1,48 @@
+<style>
+    .sidebar {
+        background-color: rgb(245, 245, 245);
+        padding: 15px;
+        border-radius: 5px;
+    }
+  
+    .list-group-item {
+        border: none;
+        padding: 10px 0; /* Adjust padding as needed */
+    }
+  
+    .list-group-item.active {
+        background-color: transparent;
+    }
+  
+    .list-group-item a {
+        color: rgb(0, 0, 0);
+        text-decoration: none; /* Ensure no underline */
+    }
+  
+    .list-group-item a:hover {
+        text-decoration: underline; /* Add underline on hover if needed */
+    }
+  
+    .sidebar {
+        width: 20%;
+        margin-bottom: 20px;
+        margin-top: 9%;
+    }
+  
+    .list-group-item a.active {
+        color: red;
+    }
+</style>
+
+
+<div class="sidebar bg-white p-4 rounded">
+    <ul class="list-group">
+        <li class="list-group-item"><a href="/userProfile" >Personal Information</a></li>
+        <li class="list-group-item"><a href="/userAddress" >Address</a></li>
+        <li class="list-group-item"><a href="/userOrders">My Orders</a></li>
+        <li class="list-group-item"><a href="/userWallet" >Wallet</a></li>
+        <li class="list-group-item"><a href="/referal" >Refaral</a></li>
+        <!-- <li class="list-group-item"><a href="/change-password" >Password Change</a></li> -->
+        <li class="list-group-item"><a href="/login" >Logout</a></li>
+    </ul>
+</div>

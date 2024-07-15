@@ -1,0 +1,543 @@
+<%- include('../layouts/header.ejs') %>
+  <%- include('../layouts/navbar.ejs') %>
+    <style>
+      .billing-form .form-control {
+        font-weight: 550;
+        background: #fdfdfd !important;
+        color: black !important;
+        font-size: 15px;
+      }
+    </style>
+    <div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
+      <div class="container">
+        <div class="row no-gutters slider-text align-items-center justify-content-center">
+          <div class="col-md-9 ftco-animate text-center">
+            <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Checkout</span></p>
+            <h1 class="mb-0 bread">Checkout</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <section class="ftco-section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-xl-10 ftco-animate">
+            <% if (typeof errorMessage !== 'undefined') { %>
+              <div class="alert alert-danger" role="alert">
+                <%= errorMessage %>
+              </div>
+            <% } %>
+            <form id="paymentForm" action="/placeOrder" method="POST" class="billing-form">
+              <a href="/addAddress" class="btn btn-primary add-address-btn"
+                style="margin-left: 86%; margin-bottom: -12%; border-radius: 4%;">Add Address</a>
+              <a href="/userAddress" class="btn btn-primary add-address-btn"
+                style="margin-left: 70%; margin-bottom: -6%; border-radius: 4%;">Select Address</a>
+              <h3 class="mb-4 billing-heading">Billing Details</h3>
+              <div class="row align-items-end">
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label for="country">State</label>
+                    <input type="text" class="form-control" name="state"
+                      value="<%= selectedAddress && selectedAddress.state ? selectedAddress.state : '' %>" readonly>
+                  </div>
+                </div>
+                <div class="w-100"></div>
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label for="streetaddress">Street Address</label>
+                    <input type="text" class="form-control" name="address"
+                      value="<%= selectedAddress && selectedAddress.address ? selectedAddress.address : '' %>" readonly>
+                  </div>
+                </div>
+                <div class="w-100"></div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="towncity">Town / City</label>
+                    <input type="text" class="form-control" name="city"
+                      value="<%= selectedAddress && selectedAddress.city ? selectedAddress.city : '' %>" readonly>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="postcodezip">Postcode / ZIP *</label>
+                    <input type="text" class="form-control" name="postalCode"
+                      value="<%= selectedAddress && selectedAddress.postalCode ? selectedAddress.postalCode : '' %>" readonly>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="row mt-5 pt-3 d-flex">
+                <div class="col-md-6">
+                  <div class="cart-detail cart-total bg-light p-3 p-md-4 h-100">
+                    <h3 class="billing-heading mb-4">ORDERS</h3>
+                    <% let total = 0; if (cart && cart.items && cart.items.length > 0) { %>
+                      <% cart.items.forEach(item => {
+                        if (item.productId) {
+                          const itemTotal = item.quantity * item.productPrice;
+                          total += itemTotal;
+                      %>
+                        <p class="d-flex">
+                          <span><%= item.productName %></span>
+                          <span><%= item.quantity %></span>
+                          <span><%= itemTotal.toFixed(2) %></span>
+                        </p>
+                      <% } }) %>
+                      <hr>
+                      <p class="d-flex total-price">
+                        <span>Total</span>
+                        <span></span>
+                        <span id="totalAmount"><%= total.toFixed(2) %></span>
+                      </p>
+                    <% } else { %>
+                      <p class="d-flex">
+                        <span>No items found in cart</span>
+                      </p>
+                    <% } %>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="cart-detail bg-light p-3 p-md-4 h-100">
+                    <h3 class="billing-heading mb-4">Payment Method</h3>
+                    <div class="form-group">
+                      <div class="col-md-12">
+                        <div class="radio">
+                          <label>
+                            <input type="radio" name="paymentMethod" value="Razorpay" class="mr-2" required> Razorpay
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <div class="col-md-12">
+                        <div class="radio">
+                          <label>
+                            <input type="radio" name="paymentMethod" value="Cash on Delivery" class="mr-2" required> Cash on Delivery
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <div class="col-md-12">
+                        <div class="radio">
+                          <label>
+                            <input type="radio" name="paymentMethod" value="Wallet" class="mr-2" required> Wallet
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <input type="hidden" name="amount" id="amount" value="<%= total.toFixed(2) %>">
+                    <div class="form-group">
+                      <label for="couponCode">Coupon Code</label>
+                      <input type="text" class="form-control" id="couponCode" name="couponCode" placeholder="Enter coupon code">
+                      <button type="button" id="applyCouponBtn" class="btn btn-secondary mt-2">Apply Coupon</button>
+                    </div>
+                    <p><button id="placeOrderBtn" type="button" class="btn btn-primary py-3 px-4">Place an order</button></p>
+                  </div>
+                </div>
+              </div>
+
+              
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+
+<script>
+ document.addEventListener('DOMContentLoaded', function () {
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    if (placeOrderBtn) {
+      placeOrderBtn.addEventListener('click', handlePlaceOrder);
+    } else {
+      console.error('Element with id "placeOrderBtn" not found');
+    }
+
+    // Configure Toastr options
+    toastr.options = {
+      "closeButton": true,
+      "debug": false,
+      "newestOnTop": false,
+      "progressBar": true,
+      "positionClass": "toast-top-right",
+      "preventDuplicates": false,
+      "onclick": null,
+      "showDuration": "300",
+      "hideDuration": "1000",
+      "timeOut": "5000",
+      "extendedTimeOut": "1000",
+      "showEasing": "swing",
+      "hideEasing": "linear",
+      "showMethod": "fadeIn",
+      "hideMethod": "fadeOut"
+    };
+  });
+  
+
+const applyCouponBtn = document.getElementById('applyCouponBtn');
+  if (applyCouponBtn) {
+    applyCouponBtn.addEventListener('click', handleApplyCoupon);
+  } else {
+    console.error('Element with id "applyCouponBtn" not found');
+  }
+
+  
+  async function applyCouponCode(couponCode, orderTotal) {
+  console.log("Applying coupon:", couponCode, "Order total:", orderTotal);
+  try {
+    const response = await fetch('/apply-coupon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ couponCode, orderTotal })
+    });
+
+    console.log("Response status:", response.status);
+    const data = await response.json();
+    console.log("Coupon application response:", data);
+
+    if (!data.success) {
+      throw new Error(data.message || 'Coupon application failed');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error applying coupon:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+
+
+async function handleApplyCoupon() {
+  const couponCodeInput = document.getElementById('couponCode');
+  const couponCode = couponCodeInput.value.trim(); // Trim the coupon code
+  const amountInput = document.getElementById('amount');
+  const amount = parseFloat(amountInput.value);
+
+  console.log("Handling apply coupon. Code:", couponCode, "Amount:", amount);
+
+  if (!couponCode) {
+    toastr.error('Please enter a coupon code.');
+    return;
+  }
+
+  try {
+    const discountResult = await applyCouponCode(couponCode, amount);
+    console.log("Discount result:", discountResult);
+
+    if (discountResult.success) {
+      const discountedAmount = parseFloat(discountResult.discountedAmount);
+
+      // Update hidden input with discounted amount
+      document.getElementById('amount').value = discountedAmount.toFixed(2);
+      
+      // Update total in "ORDERS" section
+      const totalElement = document.querySelector('.total-price span:last-child');
+      if (totalElement) {
+        totalElement.textContent = discountedAmount.toFixed(2);
+      } else {
+        console.error("Total element not found in ORDERS section");
+      }
+      
+      // Update total in payment method section
+      const paymentTotalElement = document.getElementById('totalAmount');
+      if (paymentTotalElement) {
+        paymentTotalElement.textContent = discountedAmount.toFixed(2);
+      } else {
+        console.error("Total element not found in payment method section");
+      }
+      
+      toastr.success('Coupon applied successfully.');
+    } else {
+      toastr.error(discountResult.message || 'Failed to apply coupon.');
+    }
+  } catch (error) {
+    console.error('Error applying coupon:', error);
+    toastr.error('An error occurred while applying the coupon. Please try again later.');
+  }
+}
+
+
+
+async function handlePlaceOrder() {
+  const form = document.getElementById('paymentForm');
+  const formData = new FormData(form);
+  const paymentMethod = formData.get('paymentMethod');
+  let amount = parseFloat(formData.get('amount')); // This should already be the discounted amount
+  const couponCode = formData.get('couponCode').trim();
+  const address = formData.get('address');
+
+  console.log("Payment Method:", paymentMethod);
+  console.log("Final Amount (already discounted):", amount);
+  console.log("Coupon Code:", couponCode);
+  console.log("Address:", address);
+
+  if (!validateOrder(address, paymentMethod, amount)) {
+    return;
+  }
+
+  try {
+    // Remove the coupon application logic from here
+    console.log("Proceeding with payment, Amount:", amount);
+    await proceedWithPayment(paymentMethod, amount);
+  } catch(error) {
+    console.error('Error processing order:', error);
+    toastr.error('An error occurred while processing your order. Please try again.');
+  }
+}
+
+
+function validateOrder(address, paymentMethod, amount) {
+  if (!address) {
+    toastr.error('Please select an address before placing an order.');
+    return false;
+  }
+  if (!paymentMethod) {
+    toastr.error('Please select a payment method.');
+    return false;
+  }
+  if (paymentMethod === 'Cash on Delivery' && amount > 1000) {
+    toastr.error('Cash on Delivery is not allowed for orders over $1000. Please choose another payment method.');
+    return false;
+  }
+  return true;
+}
+
+async function proceedWithPayment(paymentMethod, amount) {
+  console.log("Proceeding with payment method:", paymentMethod, "Amount:", amount);
+  switch (paymentMethod) {
+    case 'Razorpay':
+      await initiateRazorpayPayment(amount);
+      break;
+    case 'Cash on Delivery':
+      document.getElementById('paymentForm').submit();
+      break;
+    case 'Wallet':
+      await checkWalletBalanceAndSubmitForm(amount);
+      break;
+    default:
+      toastr.error('Invalid payment method selected.');
+  }
+}
+
+
+async function initiateRazorpayPayment(amount) {
+    console.log("Initiating Razorpay payment with amount:", amount);
+    try {
+      if (!amount || isNaN(amount) || amount <= 0) {
+        throw new Error('Invalid amount. Please enter a valid amount.');
+      }
+
+      const response = await fetch('/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: parseFloat(amount) })
+      });
+
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+      console.log("Received payment creation response:", data);
+
+      const options = {
+        key: data.key, // Use the key from the server response
+        amount: data.amount,
+        currency: 'INR',
+        name: 'FOXHUB',
+        description: 'Payment for your order',
+        order_id: data.id,
+        handler: function (response) {
+          handleRazorpayResponse(response, data.id);
+        },
+        modal: {
+          ondismiss: function() {
+            const state = document.querySelector('input[name="state"]').value;
+            const address = document.querySelector('input[name="address"]').value;
+            const city = document.querySelector('input[name="city"]').value;
+            const postalCode = document.querySelector('input[name="postalCode"]').value;
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const couponCode = document.querySelector('input[name="couponCode"]').value;
+
+            handlePaymentFailure(data.id, state, address, city, postalCode, paymentMethod, couponCode);
+          }
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Payment Error',
+        text: 'Error creating payment. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+}
+
+
+
+
+  function handlePaymentFailure(orderId, state, address, city, postalCode, paymentMethod, couponCode) {
+    console.log('Payment failed or modal dismissed');
+    fetch('/handle-failed-razorpay-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, state, address, city, postalCode, paymentMethod, couponCode })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Payment Failed',
+            text: 'Your payment was not successful. The order status has been set to pending.',
+            confirmButtonText: 'View Orders'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/userOrders';
+            }
+          });
+        } else {
+          throw new Error(data.message || 'Failed to process order failure');
+        }
+      })
+      .catch(error => {
+        console.error('Error handling payment failure:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred while processing your order. Please check your orders page for status.',
+          confirmButtonText: 'View Orders'
+        }).then(() => {
+          window.location.href = '/userOrders';
+        });
+      });
+  }
+async function handleRazorpayResponse(response, orderId) {
+  try {
+    response.order_id = orderId;
+    const verifyResponse = await fetch('/verify-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(response)
+    });
+
+    const data = await verifyResponse.json();
+    console.log("Received payment verification response:", data);
+    if (data.status === 'success') {
+      document.getElementById('paymentForm').submit();
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Payment Failed',
+        text: 'Payment verification failed. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Payment Error',
+      text: 'Error verifying payment. Please try again.',
+      confirmButtonText: 'OK'
+    });
+  }
+}
+
+var rzp1 = new Razorpay(options);
+console.log('rzp1:', rzp1);
+
+rzp1.on('payment.failed', function (response){
+  console.log(response.error.code);
+  console.log(response.error.description);
+  console.log(response.error.source);
+  console.log(response.error.step);
+  console.log(response.error.reason);
+  console.log(response.error.metadata.order_id);
+  console.log(response.error.metadata.payment_id);
+
+  // Call your server to update the order status
+  fetch('/handle-failed-razorpay-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderId: response.error.metadata.order_id })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Payment failed. Your order status has been updated.');
+      window.location.href = '/userOrders';
+    } else {
+      alert('Payment failed. Please try again or contact support.');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('An error occurred. Please try again or contact support.');
+  });
+});
+
+rzp1.open();
+
+async function checkWalletBalanceAndSubmitForm(amount) {
+  console.log("Checking wallet balance for amount:", amount);
+  try {
+    const response = await fetch('/check-wallet-balance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    });
+    const data = await response.json();
+    console.log("Wallet Balance Check Response:", data);
+    if (data.sufficientBalance) {
+      await deductFromWalletAndSubmitForm(amount);
+    } else {
+      toastr.error('Insufficient balance in your wallet. Please choose another payment method.');
+    }
+  } catch (error) {
+    console.error('Error checking wallet balance:', error);
+    toastr.error('An error occurred while checking the wallet balance. Please try again later.');
+  }
+}
+
+async function deductFromWalletAndSubmitForm(amount) {
+  console.log("Deducting from wallet amount:", amount);
+  try {
+    const response = await fetch('/deduct-from-wallet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    });
+    const data = await response.json();
+    console.log("Wallet deduction response:", data);
+    if (data.success) {
+      document.getElementById('paymentForm').submit();
+    } else {
+      toastr.error('Error deducting amount from wallet. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error deducting amount from wallet:', error);
+    toastr.error('Error deducting amount from wallet. Please try again.');
+  }
+}
+</script>
+
+
+    <%- include('../layouts/footer.ejs') %>

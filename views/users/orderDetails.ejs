@@ -1,0 +1,377 @@
+<%- include('../layouts/header.ejs') %>
+<%- include('../layouts/navbar.ejs') %>
+
+<link rel="stylesheet" href="/css/sidebar.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<!-- Add these scripts in the head section or just before the closing body tag -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Orders</span></p>
+        <h1 class="mb-0 bread">ORDER DETAILS</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../profileLayouts/sidebar.ejs') %>
+
+<!-- user order details -->
+
+<div class="container my-5 d-flex justify-content-center align-items-center" style="min-height: 36vh;">
+  <div class="row w-100" style="margin-top: -49%; margin-left: -20%;">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+      <div class="product-box mb-4">
+        <h2>Product Information</h2>
+        <table id="order-details-table">
+          <thead class="thead-dark">
+            <tr>
+              <th>Product Name</th>
+              <th>Image</th>
+              <th>Order ID</th>
+              <th>Status</th>
+              <th>Quantity</th>
+              <th>Total amount</th>
+            </tr>
+          </thead>
+         <!-- Inside the table body -->
+<tbody>
+  <tr>
+    <td><%= selectedItem.productId.name %></td>
+    <td><img src="/productImage/<%= selectedItem.productId.images[0] %>" alt="<%= selectedItem.productId.name %>" style="width: 100px;"></td>
+    <td style="color: #0010be;"><%= order._id %></td>
+    <td>
+      <% if (selectedItem.status === 'Delivered') { %>
+        <span style="color: green;"><%= selectedItem.status %></span>
+      <% } else if (selectedItem.status === 'Cancelled' || selectedItem.status === 'Returned') { %>
+        <span style="color: red;"><%= selectedItem.status %></span>
+      <% } else { %>
+        <span><%= selectedItem.status %></span>
+      <% } %>
+    </td>
+    <!-- Add columns for quantity and total amount -->
+    <td><%= selectedItem.quantity %></td>
+    <td>₹<%= (selectedItem.productPrice * selectedItem.quantity).toFixed(2) %></td></tbody>
+
+        </table>
+      </div>
+      <div class="address-box">
+        <h2>User Address</h2>
+        <% if (selectedAddress) { %>
+          <div class="address-container">
+            <p><strong>State:</strong> <%= selectedAddress.state %></p>
+            <p><strong>Street Address:</strong> <%= selectedAddress.address %></p>
+            <p><strong>City:</strong> <%= selectedAddress.city %></p>
+            <p><strong>Postal Code:</strong> <%= selectedAddress.postalCode %></p>
+          </div>
+        <% } else { %>
+          <p>No shipping address available.</p>
+        <% } %>
+      </div>
+    </div>
+    <div class="col-md-3" style="height: 10%; margin-top: 34%;">
+      <% if (selectedItem.status === 'Delivered') { %>
+        <button id="returnButton" class="dummyButton" data-item-id="<%= selectedItem._id %>" data-product-id="<%= selectedItem.productId._id %>">Return Order</button>
+      <% } else if (selectedItem.status === 'Cancelled' || selectedItem.status === 'Returned' || selectedItem.status === 'Pending Return') { %>
+        <!-- Do not display buttons if the item is Cancelled, Returned, or Pending Return -->
+      <% } else { %>
+        <button id="cancelButton" class="dummyButton" data-item-id="<%= selectedItem._id %>" data-product-id="<%= selectedItem.productId._id %>">Cancel Order</button>
+      <% } %>
+      <div id="reasonContainer" class="reasonContainer" style="display: none;">
+        <select id="reasonDropdown" class="reasonDropdown">
+          <option value="" disabled selected>Select a reason</option>
+          <option value="Changed my mind">Changed my mind</option>
+          <option value="Ordered by mistake">Ordered by mistake</option>
+          <option value="Product damaged">Product damaged</option>
+          <option value="Better price available">Better price available</option>
+          <option value="Other">Other</option>
+        </select>
+        <button id="submitReasonButton" class="btn">Submit</button>
+      </div>
+    </div>
+    <% if (selectedItem.status === 'Delivered') { %>
+      <button 
+        style="margin-left: 62%;" 
+        id="generateInvoiceBtn" 
+        class="btn" 
+        data-order-id="<%= order._id %>"
+        data-product-name="<%= selectedItem.productId.name %>"
+        data-quantity="<%= selectedItem.quantity %>"
+        data-price="<%= selectedItem.productPrice %>"
+        data-total="<%= (selectedItem.productPrice * selectedItem.quantity).toFixed(2) %>"
+      >
+        Generate Invoice
+      </button>
+    <% } %>
+  </div>
+
+</div>
+
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM fully loaded');
+
+  const generateInvoiceBtn = document.getElementById('generateInvoiceBtn');
+  console.log('Generate Invoice button:', generateInvoiceBtn);
+
+  if (generateInvoiceBtn) {
+    console.log('Adding click event listener to button');
+    generateInvoiceBtn.addEventListener('click', function(event) {
+      console.log('Generate Invoice button clicked');
+      event.preventDefault();
+      downloadPDF();
+    });
+  } else {
+    console.error('Generate Invoice button not found');
+  }
+
+  function downloadPDF() {
+    console.log('Attempting to download PDF');
+    if (typeof window.jspdf === 'undefined') {
+      console.error('jsPDF is not defined. Make sure the script is loaded correctly.');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    console.log('jsPDF loaded:', jsPDF);
+
+    const doc = new jsPDF();
+
+    doc.setProperties({
+      title: 'Order Invoice',
+      subject: 'Invoice for your recent purchase',
+      author: 'FoxHub',
+      keywords: 'invoice, order, purchase',
+      creator: 'FoxHub Invoice Generator'
+    });
+
+    const primaryColor = [41, 128, 185];
+    const secondaryColor = [44, 62, 80];
+
+    const table = document.getElementById('order-details-table');
+    if (!table) {
+      console.error('order-details-table not found');
+      return;
+    }
+
+    const rows = Array.from(table.rows).slice(1);
+
+    let content = [];
+    rows.forEach((row) => {
+      const cells = row.cells;
+      let rowData = [];
+      rowData.push(cells[0].innerText); // Product Name
+      rowData.push(cells[2].innerText); // Order ID
+      rowData.push(cells[3].innerText); // Status
+      rowData.push(cells[4].innerText); // Quantity
+      rowData.push(cells[5].innerText); // Total amount
+      content.push(rowData);
+    });
+
+    const addressBox = document.querySelector('.address-container');
+    const addressLines = addressBox ? addressBox.innerText.split('\n') : [];
+    const addressContent = addressLines.join('\n');
+
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Order Invoice", 105, 25, null, null, 'center');
+
+    doc.setTextColor(...secondaryColor);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text("FoxHub", 14, 50);
+    doc.text("Email: foxhub@gmail.com", 14, 56);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 62);
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Order Details", 14, 75);
+
+    doc.autoTable({
+      head: [['Product Name', 'Order ID', 'Status', 'Quantity', 'Total Amount']],
+      body: content,
+      startY: 80,
+      styles: { fontSize: 10, cellPadding: 5 },
+      headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      columnStyles: {
+        0: { cellWidth: 60 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 40 }
+      }
+    });
+
+    const addressStartY = doc.autoTable.previous.finalY + 20;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Shipping Address", 14, addressStartY);
+
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(14, addressStartY + 5, 180, 35, 3, 3, 'F');
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...secondaryColor);
+    doc.text(addressContent, 17, addressStartY + 12);
+
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 270, 210, 27, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Thank you for your purchase!", 105, 285, null, null, 'center');
+
+    console.log('PDF generated, attempting to save');
+    doc.save('order_invoice.pdf');
+  }
+
+  // Cancel/Return functionality
+  const reasonContainer = document.getElementById('reasonContainer');
+  const reasonDropdown = document.getElementById('reasonDropdown');
+  const submitReasonButton = document.getElementById('submitReasonButton');
+  let currentItemId = null;
+  let currentProductId = null;
+  let currentAction = null;
+
+  document.querySelectorAll('#cancelButton, #returnButton').forEach(button => {
+    button.addEventListener('click', function () {
+      currentItemId = this.getAttribute('data-item-id');
+      currentProductId = this.getAttribute('data-product-id');
+      currentAction = this.id === 'cancelButton' ? 'cancel' : 'return';
+      reasonContainer.style.display = 'block';
+    });
+  });
+
+  submitReasonButton.addEventListener('click', function () {
+    const reason = reasonDropdown.value;
+    if (reason && currentItemId && currentProductId) {
+      const orderId = '<%= order._id %>';
+      fetch(`/orders/${currentAction}Item`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderId, itemId: currentItemId, productId: currentProductId, reason })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Toastify({
+            text: `Item ${currentAction} request submitted successfully`,
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#4fbe87"
+          }).showToast();
+          reasonDropdown.value = "";
+          reasonContainer.style.display = 'none';
+          setTimeout(() => location.reload(), 3000);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: `Failed to submit ${currentAction} request: ${data.message}`
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'An error occurred while submitting your request.'
+        });
+      });
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Information',
+        text: 'Please select a reason and ensure all required information is available.'
+      });
+    }
+  });
+});
+</script>
+
+
+
+<style>
+  table {
+    width: 150%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  table, th, td {
+    border: 1px solid #050505;
+    padding: 8px;
+    color: #000000;
+  }
+
+  th {
+    background-color: #221f1f;
+    color: #ffffff;
+  }
+
+  .btn {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .btn-secondary {
+    background-color: #ea0800;
+  }
+
+  .btn-secondary[disabled] {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  .product-box, .address-box {
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .address-container {
+    border: 2px solid #000000;
+    padding: 20px;
+    border-radius: 5px;
+    color: #000000;
+  }
+
+  .dummyButton {
+    background-color: #bf1111;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .dummyButton.clicked {
+    background-color: #ff0000;
+  }
+</style>
+
+<%- include('../layouts/footer.ejs') %>

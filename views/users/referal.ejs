@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referral Page</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+<body>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h3 class="card-title text-center mb-4">Your Referral Code</h3>
+            <% if (userData) { %>
+              <div class="form-group">
+                <label for="referralCode">Your Referral Code:</label>
+                <input type="text" class="form-control text-center" id="referralCode" value="<%= userData.referral_code %>" readonly>
+              </div>
+              <div class="text-center">
+                <button class="btn btn-primary" onclick="copyReferralCode()">Copy Code</button>
+              </div>
+            <% } else { %>
+              <p>No user data available.</p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="referralToast" data-delay="3000">
+    <div class="toast-body">
+      Referral code copied!
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function copyReferralCode() {
+      var copyText = document.getElementById("referralCode");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999); // For mobile devices
+      document.execCommand("copy");
+
+      $('#referralToast').toast('show');
+    }
+  </script>
+</body>
+</html>

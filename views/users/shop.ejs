@@ -1,0 +1,401 @@
+<%- include('../layouts/header.ejs') %>
+<%- include('../layouts/navbar.ejs') %>
+
+<!-- HTML Structure -->
+<div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <p class="breadcrumbs"><span class="mr-2"><a href="home.html">Home</a></span> <span>Shop</span></p>
+        <h1 class="mb-0 bread">Shop</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="container mt-4">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <form class="form-inline my-2 my-lg-0" method="GET" action="/shop" style="width: 54%; margin-left: 25%;">
+        <input class="form-control mr-sm-2" type="search" name="search" placeholder="Search" aria-label="Search" value="<%= searchQuery %>">
+        <input type="hidden" name="category" value="<%= category %>">
+        <input type="hidden" name="sort" value="<%= sortOption %>">
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+      </form>
+    </div>
+    <div class="col-md-4">
+      <div class="dropdown mb-4">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 100%;">
+          Sort By
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <a class="dropdown-item" href="#" onclick="sortItems('az')">A-Z</a>
+          <a class="dropdown-item" href="#" onclick="sortItems('za')">Z-A</a>
+          <a class="dropdown-item" href="#" onclick="sortItems('priceLowHigh')">Price: Low to High</a>
+          <a class="dropdown-item" href="#" onclick="sortItems('priceHighLow')">Price: High to Low</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="ftco-section bg-light">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-8 col-lg-10 order-md-last">
+        <% if (typeof message !== 'undefined' && message) { %>
+          <div class="alert alert-success" role="alert">
+            <%= message %>
+          </div>
+        <% } %>
+  
+        <% if (products.length === 0) { %>
+          <div class="row">
+            <div class="col text-center">
+              <h2 style="margin-top: 10%;">No products available</h2>
+            </div>
+          </div> 
+        <% } else { %>
+
+        <div class="row products">
+          <% products.forEach(function(product) { %>
+            <div class="col-sm-12 col-md-6 col-lg-4 ftco-animate d-flex">
+              <div class="product d-flex flex-column equal-height">
+                <a href="/productSingle/<%= product._id %>" class="img-prod">
+                  <img class="img-fluid" src="/productImage/<%= product.images[0] %>" alt="<%= product.name %>" style="width: 100%; height: auto; object-fit: cover;">
+                  <div class="overlay"></div>
+                </a>
+                <div class="text py-3 pb-4 px-3">
+                  <div class="d-flex">
+                    <div class="cat">
+                      <span><%= product.category.name %></span>
+                    </div>
+                    <div class="rating">
+                      <p class="text-right mb-0">
+                        <% for (var i = 0; i < 5; i++) { %>
+                          <% if (i < product.rating) { %>
+                            <i class="ti ti-star"></i>
+                          <% } else { %>
+                            <i class="ti ti-star-empty"></i>
+                          <% } %>
+                        <% } %>
+                      </p>
+                    </div>
+                  </div>
+                  <h3><a href="#"><%= product.name %></a></h3>
+                  <div class="pricing">
+                    <p class="price">
+                      <% if (product.finalPrice < product.price) { %>
+                        <span class="original-price" style="text-decoration: line-through; color: red;">₹<%= product.price %></span><br>
+                        <span class="discounted-price" style="color: green;">₹<%= product.finalPrice %></span>
+                        <span class="discount-info">
+                          <% if (product.categoryOffer) { %>
+                            (Category Offer: <%= product.categoryOffer.discountPercentage %>%)
+                          <% } %>
+                        </span>
+                      <% } else { %>
+                        <span>₹<%= product.price %></span>
+                      <% } %>
+                    </p>
+                    <!-- Add to cart form -->
+                    <form action="/add-to-cart" method="post" class="add-to-cart-form">
+                      <input type="hidden" name="productId" value="<%= product._id %>">
+                      <input type="hidden" name="productName" value="<%= product.name %>">
+                      <input type="hidden" name="productPrice" value="<%= product.finalPrice %>">
+                      <input type="hidden" name="productImage" value="<%= product.images[0] %>">
+                      <input type="hidden" name="availableQuantity" value="<%= product.quantity %>">
+                      <input type="submit" class="btn btn-success btn-sm addButton" value="Add to Cart" <%= product.quantity === 0 ? 'disabled' : '' %>/>
+                    </form>
+                    <p>
+                      <% if (product.quantity === 0) { %>
+                        <span class="quantity-box" style="color: rgb(255, 0, 0);">
+                          Out of Stock
+                        </span>
+                      <% } else { %>
+                        <span class="quantity-box">
+                          <%= product.quantity %> piece<%= product.quantity > 1 ? 's' : '' %> left
+                        </span>
+                      <% } %>
+                    </p>
+                  </div>
+                  <p class="bottom-area d-flex px-3">
+                    <form action="/add-to-wishlist" method="post">
+                      <input type="hidden" name="userId" value="<%= user ? user._id : '' %>">
+                      <input type="hidden" name="productId" value="<%= product._id %>">
+                      <button class="action btn-success" type="submit">Add to Wishlist</button>
+                    </form>
+                  </p>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+
+        <% } %>
+
+        <div class="row mt-5">
+          <div class="col text-center">
+            <div class="block-27">
+              <ul>
+                <% if (currentPage > 1) { %>
+                  <li><a href="<%= `/shop?page=${currentPage - 1}&sort=${sortOption}&category=${category}&search=${searchQuery}` %>">&lt;</a></li>
+                <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                  <li class="<%= i === currentPage ? 'active' : '' %>">
+                    <a href="<%= `/shop?page=${i}&sort=${sortOption}&category=${category}&search=${searchQuery}` %>"><%= i %></a>
+                  </li>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                  <li><a href="<%= `/shop?page=${currentPage + 1}&sort=${sortOption}&category=${category}&search=${searchQuery}` %>">&gt;</a></li>
+                <% } %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4 col-lg-2">
+        <div class="sidebar">
+          <div class="sidebar-box-2">
+            <div class="fancy-collapse-panel">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingOne">
+                  <h4 class="panel-title">Categories</h4>
+                </div>
+                <div class="panel-body">
+                  <ul>
+                    <li><a href="/shop?category=all&sort=<%= sortOption %>&search=<%= searchQuery %>">ALL</a></li>
+                    <% categories.forEach(category => { %>
+                      <li>
+                        <a href="/shop?category=<%= category._id %>&sort=<%= sortOption %>&search=<%= searchQuery %>">
+                          <%= category.name %>
+                          <% if (categoryOffersMap[category._id]) { %>
+                            <span class="discount-badge">
+                              <%= categoryOffersMap[category._id] %>% off
+                            </span>
+                          <% } %>
+                        </a>
+                      </li>
+                    <% }) %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+<!-- Custom CSS -->
+<style>
+  .discount-badge {
+  background-color: #d9534f; /* Red color */
+  color: white;
+  padding: 0.2em 0.5em;
+  font-size: 0.8em;
+  border-radius: 0.2em;
+  margin-left: 5px;
+}
+
+.discount-badge.green {
+  background-color: #5cb85c; /* Green color */
+}
+
+
+  .equal-height {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    
+  }
+
+  .product {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fff;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    width: 100%; /* Ensuring the product box takes full width */
+    height: 97%; /* Ensuring the product box takes full height */
+  }
+
+  .product:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+
+  .img-prod {
+    position: relative;
+    width: 100%;
+    height: 250px; /* Set a fixed height for the image container */
+    overflow: hidden;
+  }
+
+  .img-prod img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  .img-prod .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    border-radius: 10px;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .img-prod:hover .overlay {
+    opacity: 1;
+  }
+
+  .text {
+    text-align: center;
+  }
+
+  .text .cat {
+    margin-bottom: 10px;
+    color: #888;
+    font-size: 14px;
+  }
+
+  .text h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .text .pricing {
+    margin-bottom: 20px;
+  }
+
+  .text .price {
+    font-size: 18px;
+    color: #28a745;
+  }
+
+  .text .quantity-box {
+    font-size: 14px;
+    color: #555;
+  }
+
+  .add-to-cart-form .btn-success,
+  .action.btn-success {
+    background-color: #0b0b0b;
+    border-color: #0a0b0a;
+    color: #fff;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+
+  }
+
+  .add-to-cart-form .btn-success:hover,
+  .action.btn-success:hover {
+    background-color: #218838;
+    transform: translateY(-3px);
+    border-color:  #218838;
+    ;
+
+  }
+
+  .gallery .img {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    height: 200px; /* Set a fixed height for the gallery images */
+    width: 100%; /* Ensure the gallery images take full width */
+  }
+
+  .gallery .icon {
+    position: absolute;
+    color: #fff;
+    font-size: 24px;
+  }
+</style>
+
+
+
+<section class="ftco-gallery">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 heading-section text-center mb-4 ftco-animate">
+        <h2 class="mb-4">Follow Us On Instagram</h2>
+        <p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in</p>
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid px-0">
+    <div class="row no-gutters">
+      <div class="col-md-4 col-lg-2 ftco-animate">
+        <a href="/assets/images/gallery-1.jpg" class="gallery image-popup img d-flex align-items-center" style="background-image: url(/assets/images/gallery-1.jpg);">
+          <div class="icon mb-4 d-flex align-items-center justify-content-center">
+            <span class="icon-instagram"></span>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4 col-lg-2 ftco-animate">
+        <a href="/assets/images/gallery-2.jpg" class="gallery image-popup img d-flex align-items-center" style="background-image: url(/assets/images/gallery-2.jpg);">
+          <div class="icon mb-4 d-flex align-items-center justify-content-center">
+            <span class="icon-instagram"></span>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4 col-lg-2 ftco-animate">
+        <a href="/assets/images/gallery-3.jpg" class="gallery image-popup img d-flex align-items-center" style="background-image: url(/assets/images/gallery-3.jpg);">
+          <div class="icon mb-4 d-flex align-items-center justify-content-center">
+            <span class="icon-instagram"></span>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4 col-lg-2 ftco-animate">
+        <a href="/assets/images/gallery-4.jpg" class="gallery image-popup img d-flex align-items-center" style="background-image: url(/assets/images/gallery-4.jpg);">
+          <div class="icon mb-4 d-flex align-items-center justify-content-center">
+            <span class="icon-instagram"></span>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4 col-lg-2 ftco-animate">
+        <a href="/assets/images/gallery-5.jpg" class="gallery image-popup img d-flex align-items-center" style="background-image: url(/assets/images/gallery-5.jpg);">
+          <div class="icon mb-4 d-flex align-items-center justify-content-center">
+            <span class="icon-instagram"></span>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4 col-lg-2 ftco-animate">
+        <a href="/assets/images/gallery-6.jpg" class="gallery image-popup img d-flex align-items-center" style="background-image: url(/assets/images/gallery-6.jpg);">
+          <div class="icon mb-4 d-flex align-items-center justify-content-center">
+            <span class="icon-instagram"></span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<script>
+  function sortItems(sortType) {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('sort', sortType);
+    window.location.search = urlParams.toString();
+  }
+</script>
+
+<%- include('../layouts/footer.ejs') %>
