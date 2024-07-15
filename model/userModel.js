@@ -39,7 +39,6 @@ const userSchema = new mongoose.Schema({
     otp_expires: Date,
     googleId: {
         type: String,
-        // Removed unique: true
     },
     walletBalance: {
         type: Number,
