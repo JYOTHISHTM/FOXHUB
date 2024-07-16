@@ -43,23 +43,25 @@
             </tr>
           </thead>
          <!-- Inside the table body -->
-<tbody>
-  <tr>
-    <td><%= selectedItem.productId.name %></td>
-    <td><img src="/productImage/<%= selectedItem.productId.images[0] %>" alt="<%= selectedItem.productId.name %>" style="width: 100px;"></td>
-    <td style="color: #0010be;"><%= order._id %></td>
-    <td>
-      <% if (selectedItem.status === 'Delivered') { %>
-        <span style="color: green;"><%= selectedItem.status %></span>
-      <% } else if (selectedItem.status === 'Cancelled' || selectedItem.status === 'Returned') { %>
-        <span style="color: red;"><%= selectedItem.status %></span>
-      <% } else { %>
-        <span><%= selectedItem.status %></span>
-      <% } %>
-    </td>
-    <!-- Add columns for quantity and total amount -->
-    <td><%= selectedItem.quantity %></td>
-    <td>₹<%= (selectedItem.productPrice * selectedItem.quantity).toFixed(2) %></td></tbody>
+         <tbody>
+          <tr>
+            <td><%= selectedItem.productId.name %></td>
+            <td><img src="/productImage/<%= selectedItem.productId.images[0] %>" alt="<%= selectedItem.productId.name %>" style="width: 100px;"></td>
+            <td style="color: #0010be;"><%= order._id %></td>
+            <td>
+              <% if (selectedItem.status === 'Delivered') { %>
+                <span style="color: green;"><%= selectedItem.status %></span>
+              <% } else if (selectedItem.status === 'Cancelled' || selectedItem.status === 'Returned') { %>
+                <span style="color: red;"><%= selectedItem.status %></span>
+              <% } else { %>
+                <span><%= selectedItem.status %></span>
+              <% } %>
+            </td>
+            <td><%= selectedItem.quantity %></td>
+            <td>₹<%= (selectedItem.finalPrice * selectedItem.quantity).toFixed(2) %></td>
+          </tr>
+        </tbody>
+        
 
         </table>
       </div>
@@ -114,6 +116,7 @@
   </div>
 
 </div>
+
 
 
 
