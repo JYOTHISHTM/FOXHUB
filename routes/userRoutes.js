@@ -223,6 +223,15 @@ userRoute.post('/apply-coupon', userCouponController.applyCoupon);
 userRoute.get('/referal', userController.renderRefferal);
 
 
+//////////////
+
+userRoute.post('/create-razorpay-order', userOrderController.createRazorpayOrder);
+userRoute.post('/verify-razorpay-payment', userOrderController.verifyRazorpayPayment);
+userRoute.post('/update-order-status', userOrderController.updateOrderStatus);
+
+
+/////////////////
+
 
 module.exports = userRoute;
 

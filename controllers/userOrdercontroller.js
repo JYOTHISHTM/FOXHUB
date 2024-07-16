@@ -3,10 +3,21 @@ const Coupon = require('../model/couponModel')
 const Product = require('../model/productModel');
 const User = require('../model/userModel'); // Add this line to import the User model
 const Wallet = require('../model/walletModel'); // Add this line to import the Wallet model
+const crypto = require('crypto');
 
 const ProductOffer = require('../model/productOfferModel');
 const CategoryOffer = require('../model/categoryOfferModel');
+// userOrdercontroller
 
+const Razorpay = require('razorpay');
+
+require('dotenv').config();
+
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
 
 const renderOrderdetails = async (req, res) => {
   try {
@@ -103,6 +114,8 @@ const returnItem = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+
 const cancelItem = async (req, res) => {
   try {
     console.log("Cancel item request received");
@@ -299,11 +312,78 @@ const renderUserorder = async (req, res) => {
 };
 
 
+const createRazorpayOrder = async (req, res) => {
+  const { amount, orderId } = req.body;
 
+  try {
+    const razorpayOrder = await razorpay.orders.create({
+      amount: amount * 100, // amount in the smallest currency unit
+      currency: 'INR',
+      receipt: orderId,
+    });
+
+    res.json({
+      id: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      key: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    console.error('Error creating Razorpay order:', error);
+    res.status(500).json({ error: 'Failed to create Razorpay order' });
+  }
+};
+
+const verifyRazorpayPayment = async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+
+  try {
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+                                    .update(body.toString())
+                                    .digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+      await Order.findByIdAndUpdate(orderId, { status: 'Paid', paymentId: razorpay_payment_id });
+      res.json({ status: 'success' });
+    } else {
+      res.json({ status: 'failure', message: 'Payment verification failed' });
+    }
+  } catch (error) {
+    console.error('Error verifying Razorpay payment:', error);
+    res.status(500).json({ error: 'Failed to verify Razorpay payment' });
+  }
+};
+
+const updateOrderStatus = async (req, res) => {
+  const { orderId, status } = req.body;
+
+  try {
+    const updatedOrder = await Order.findByIdAndUpdate(orderId, 
+      { status: status, 'items.$[].status': status },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    res.json({ success: true, message: 'Order status updated successfully' });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ success: false, message: 'Failed to update order status' });
+  }
+};
 
 module.exports = {
   renderUserorder,
   renderOrderdetails,
   cancelItem,
   returnItem,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  updateOrderStatus
+
+
+
 };

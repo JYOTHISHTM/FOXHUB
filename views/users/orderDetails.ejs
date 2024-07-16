@@ -1,6 +1,6 @@
 <%- include('../layouts/header.ejs') %>
 <%- include('../layouts/navbar.ejs') %>
-
+<!-- orderDetails.ejs -->
 <link rel="stylesheet" href="/css/sidebar.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -115,12 +115,21 @@
     <% } %>
   </div>
 
+  <% if (selectedItem.status === 'Payment Failed' && order.paymentMethod === 'Razorpay') { %>
+    <button id="retryPaymentBtn" class="btn btn-primary" data-order-id="<%= order._id %>" data-amount="<%= order.totalAmount %>">Retry Payment</button>
+  <% } %>
+  
+  
 </div>
-
-
-
-
-
+<script src="https://orderDetails.razorpay.com/v1/orderDetails.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <!-- Debugging logs -->
+  <script>
+    console.log('selectedItem.status:', '<%= selectedItem.status %>');
+    console.log('order.paymentMethod:', '<%= order.paymentMethod %>');
+    console.log('order._id:', '<%= order._id %>');
+    console.log('order.totalAmount:', '<%= order.totalAmount %>');
+  </script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM fully loaded');
@@ -313,7 +322,100 @@
 });
 </script>
 
-
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const retryPaymentBtn = document.getElementById('retryPaymentBtn');
+    if (retryPaymentBtn) {
+      retryPaymentBtn.addEventListener('click', handleRetryPayment);
+    }
+  });
+  
+  async function handleRetryPayment(event) {
+    const orderId = event.target.getAttribute('data-order-id');
+    const amount = parseFloat(event.target.getAttribute('data-amount'));
+  
+    console.log("Retrying payment for order:", orderId, "Amount:", amount);
+  
+    try {
+      const response = await fetch('/create-razorpay-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, orderId })
+      });
+  
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+  
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: 'INR',
+        name: 'FOXHUB',
+        description: 'Payment for your order',
+        order_id: data.id,
+        handler: function (response) {
+          handleRazorpayResponse(response, data.id, orderId);
+        }
+      };
+  
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Error creating Razorpay order:', error);
+      Toastify({
+        text: 'An error occurred while creating the order. Please try again later.',
+        duration: 3000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#f44336"
+      }).showToast();
+    }
+  }
+  
+  async function handleRazorpayResponse(response, razorpayOrderId, orderId) {
+    try {
+      const verifyResponse = await fetch('/verify-razorpay-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...response, razorpayOrderId, orderId })
+      });
+  
+      const data = await verifyResponse.json();
+      if (data.status === 'success') {
+        // Update order status to Processing
+        const updateStatusResponse = await fetch('/update-order-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, status: 'Processing' })
+        });
+  
+        if (!updateStatusResponse.ok) {
+          throw new Error('Failed to update order status');
+        }
+  
+        Swal.fire({
+          icon: 'success',
+          title: 'Payment Successful',
+          text: 'Your payment has been processed successfully. Your order status is now Processing.',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          window.location.href = '/userOrders'; 
+        });
+      } else {
+        throw new Error('Payment verification failed');
+      }
+    } catch (error) {
+      console.error('Error verifying Razorpay payment:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Payment Error',
+        text: 'Error verifying payment. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+  </script>
 
 <style>
   table {
