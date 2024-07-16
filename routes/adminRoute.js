@@ -104,48 +104,12 @@ adminRoute.post('/orders/:orderId/status', async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // admin orders
 adminRoute.get('/adminOrderDetails/:orderId/:productId', adminOrdersController.renderOrderDetails);
 adminRoute.get('/admin/orders', adminOrdersController.renderOrders);
-
-
-
 adminRoute.get('/admin/orders/:orderId', adminOrdersController.renderOrderDetails);
 adminRoute.post('/approve-return', adminOrdersController.approveReturn);
-
 adminRoute.post('/update-order-status',adminOrdersController. updateOrderStatus);
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // admin coupon 
@@ -154,9 +118,6 @@ adminRoute.get('/coupons', adminCouponController.renderCoupons);
 adminRoute.get('/addCoupon', adminCouponController.renderAddCoupons);
 adminRoute.post('/addCoupon', adminCouponController.addCoupon);
 adminRoute.get('/deleteCoupon/:id', adminCouponController.deleteCoupon);
-
-
-
 adminRoute.get('/checkDuplicateTitle',adminCouponController. checkDuplicateTitle);
 adminRoute.get('/checkDuplicateCode',adminCouponController. checkDuplicateCode);
 
@@ -170,30 +131,13 @@ adminRoute.post('/editProductOffer/:id', adminProductOffercontroller.updateProdu
 adminRoute.delete('/deleteProductOffer/:id', adminProductOffercontroller.deleteProductOffer);
 
 
-
-
-
-
-
 // admin category offer
-
-
-///////////////////
-
 adminRoute.get('/categoryOffer',adminCategoryOffercontroller.renderCategoryOffer)
 adminRoute.get('/addCategoryOffer',adminCategoryOffercontroller.addCategoryOffer)
 adminRoute.post('/addCategoryOffer', adminCategoryOffercontroller.saveCategoryOffer);
 adminRoute.get('/editCategoryOffer/:id', adminCategoryOffercontroller.editCategoryOffer);
 adminRoute.post('/editCategoryOffer/:id', adminCategoryOffercontroller.updateCategoryOffer);
 adminRoute.delete('/deleteCategoryOffer/:id', adminCategoryOffercontroller.deleteCategoryOffer);
-
-
-///////////////////
-
-
-
-adminRoute.get('/salesReport', adminSalesControllers.renderSalesReport);
-
 
 
 adminRoute.get('/dashboard', chartController.renderDashboard)
@@ -294,5 +238,17 @@ function processSalesData(orders, timeframe) {
 
     return data;
 }
+
+
+
+// sales report 
+adminRoute.get('/salesReport', adminSalesControllers.renderSalesReport);
+adminRoute.post('/salesReport', adminSalesControllers.filterSalesReport);
+
+
+adminRoute.get('/salesReport/pdf', adminSalesControllers.downloadSalesReportPDF);
+adminRoute.get('/salesReport/excel', adminSalesControllers.downloadSalesReportExcel);
+
+
 
 module.exports = adminRoute

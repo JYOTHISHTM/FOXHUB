@@ -209,28 +209,19 @@ userRoute.post('/check-wallet-balance', walletController.checkWalletBalance);
 userRoute.post('/deduct-from-wallet', walletController.deductFromWallet);
 userRoute.get('/userWallet', walletController.renderWallet);
 
-
-
-
-
 // user coupon 
-
-
 userRoute.get('/available-coupons', userCouponController.getAvailableCoupons);
 userRoute.get('/userCoupon', userCouponController.renderUserCoupon);
 userRoute.post('/apply-coupon', userCouponController.applyCoupon);
-
 userRoute.get('/referal', userController.renderRefferal);
 
-
-//////////////
+// retry payment
 
 userRoute.post('/create-razorpay-order', userOrderController.createRazorpayOrder);
 userRoute.post('/verify-razorpay-payment', userOrderController.verifyRazorpayPayment);
 userRoute.post('/update-order-status', userOrderController.updateOrderStatus);
 
 
-/////////////////
 
 
 module.exports = userRoute;
