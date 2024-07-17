@@ -82,7 +82,7 @@
     <div class="col-md-3" style="height: 10%; margin-top: 34%;">
       <% if (selectedItem.status === 'Delivered') { %>
         <button id="returnButton" class="dummyButton" data-item-id="<%= selectedItem._id %>" data-product-id="<%= selectedItem.productId._id %>">Return Order</button>
-      <% } else if (selectedItem.status === 'Cancelled' || selectedItem.status === 'Returned' || selectedItem.status === 'Pending Return') { %>
+      <% } else if (selectedItem.status === 'Cancelled' || selectedItem.status === 'Returned' || selectedItem.status === 'Pending Return' ||  selectedItem.status === 'Payment Failed' ) { %>
         <!-- Do not display buttons if the item is Cancelled, Returned, or Pending Return -->
       <% } else { %>
         <button id="cancelButton" class="dummyButton" data-item-id="<%= selectedItem._id %>" data-product-id="<%= selectedItem.productId._id %>">Cancel Order</button>
@@ -116,7 +116,8 @@
   </div>
 
   <% if (selectedItem.status === 'Payment Failed' && order.paymentMethod === 'Razorpay') { %>
-    <button id="retryPaymentBtn" class="btn btn-primary" data-order-id="<%= order._id %>" data-amount="<%= order.totalAmount %>">Retry Payment</button>
+    <button style="    margin-left: -18%;
+    margin-bottom: 18%;" id="retryPaymentBtn" class="btn btn-primary" data-order-id="<%= order._id %>" data-amount="<%= order.totalAmount %>">Retry Payment</button>
   <% } %>
   
   
