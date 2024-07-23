@@ -39,6 +39,7 @@
 </div>
 <%- include('../profileLayouts/sideBar.ejs') %>
 
+<!-- user orders.ejs -->
 <div class="container my-5 d-flex justify-content-center align-items-center" style="min-height: 50vh;">
   <div class="row w-100 justify-content-center" style="margin-top: -35%">
     <div class="col-md-9" style="margin-left: -6%;">
@@ -68,7 +69,13 @@
                     <% if (item.productId) { %>
                       <td><img src="/productImage/<%= item.productId.images[0] %>" alt="<%= item.productId.name %>" style="width: 100px;"></td>
                       <td><%= item.productId.name %></td>
-                      <td><%= item.finalPriceAfterCoupon.toFixed(2) %></td>
+                      <td>
+                        <% if (item.finalPriceAfterCoupon !== undefined) { %>
+                          <%= item.finalPriceAfterCoupon.toFixed(2) %>
+                        <% } else { %>
+                          <%= item.finalPriceForTotalQuantity.toFixed(2) %>
+                        <% } %>
+                      </td>
                       <td>
                         <% const status = item.status || order.status; %>
                         <% if (status === 'Processing') { %>
@@ -100,12 +107,10 @@
                 <% }); %>
               <% }); %>
             </tbody>
-
           </table>
         </div>
       <% } %>
     </div>
   </div>
 </div>
-
 <%- include('../layouts/footer.ejs') %>

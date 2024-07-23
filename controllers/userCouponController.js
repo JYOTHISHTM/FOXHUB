@@ -36,6 +36,8 @@ const renderUserCoupon = async (req, res) => {
     res.status(500).render('error', { message: 'An error occurred while fetching coupons.' });
   }
 };
+
+
 const applyCoupon = async (req, res) => {
   console.log("applyCoupon called");
   try {
@@ -78,7 +80,7 @@ const applyCoupon = async (req, res) => {
 
     const discountAmount = parsedOrderTotal * (coupon.discountPercentage / 100);
     const discountedTotal = parsedOrderTotal - discountAmount;
-    console.log("Discount amount:", discountAmount);
+    console.log("coupon discount amount:", discountAmount);
     console.log("Calculated discounted total:", discountedTotal);
 
     return res.status(200).json({

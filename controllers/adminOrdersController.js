@@ -5,9 +5,10 @@ const Product = require('../model/productModel');
 const Order = require('../model/orderModel');
 const ProductOffer = require('../model/productOfferModel');
 const CategoryOffer = require('../model/categoryOfferModel');
-const Wallet = require('../model/walletModel'); // Add this line to import the Wallet model
+const Wallet = require('../model/walletModel'); 
+const Coupon = require('../model/couponModel');
 
-// admin order controller
+
 const renderOrders = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -23,49 +24,68 @@ const renderOrders = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    // Calculate the final price for each item in the orders
+    // Calculate the price and total for each item in the orders
     const ordersWithFinalPrice = await Promise.all(orders.map(async (order) => {
+      let totalDiscount = 0;
 
       const items = await Promise.all(order.items.map(async (item) => {
-        console.log(item+"items");
-
         const product = item.productId;
-        let finalPrice = product.price;
+        let basePrice = product.price;
+        let discountedPrice = basePrice;
 
         // Check if there's a product offer for the product
         const productOffer = await ProductOffer.findOne({ product: product._id });
         if (productOffer) {
-          finalPrice = product.price - (product.price * (productOffer.discountPercentage / 100));
+          discountedPrice = basePrice - (basePrice * (productOffer.discountPercentage / 100));
         }
 
         // Check if there's a category offer for the product's category
         const categoryOffer = await CategoryOffer.findOne({ category: product.category });
         if (categoryOffer) {
-          const categoryDiscount = product.price * (categoryOffer.discountPercentage / 100);
-          finalPrice = Math.min(finalPrice, product.price - categoryDiscount);
+          const categoryDiscount = basePrice * (categoryOffer.discountPercentage / 100);
+          discountedPrice = Math.min(discountedPrice, basePrice - categoryDiscount);
         }
+
+        // Apply coupon if available
+        if (order.coupon) {
+          const coupon = await Coupon.findOne({ code: order.coupon });
+          if (coupon) {
+            const couponDiscountedPrice = basePrice - (basePrice * (coupon.discountPercentage / 100));
+            discountedPrice = Math.min(discountedPrice, couponDiscountedPrice);
+            totalDiscount += (basePrice - discountedPrice) * item.quantity;
+          }
+        }
+
+        // Calculate item total with quantity
+        let itemTotal = discountedPrice * item.quantity;
 
         return {
           ...item._doc,
           productId: product,
-          finalPrice
+          price: discountedPrice,  // Adjusted price after offers and coupon discount
+          itemTotal                // Total price after offers and coupon discount
         };
       }));
 
       // Determine if the order has any requests
       const hasRequest = order.items.some(item => item.cancelReason || item.returnReason);
 
+      // Calculate total amount after discounts
+      const totalAmount = items.reduce((acc, item) => acc + item.itemTotal, 0);
+
       return {
         ...order._doc,
         items,
+        totalAmount,
+        totalDiscount,
         hasRequest
       };
     }));
 
     const totalPages = Math.ceil(totalOrders / limit);
 
-    res.render('orders', { 
-      orders: ordersWithFinalPrice, 
+    res.render('orders', {
+      orders: ordersWithFinalPrice,
       currentUrl: req.path,
       currentPage: page,
       totalPages: totalPages
@@ -75,8 +95,6 @@ const renderOrders = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
-
-
 
 const renderOrderDetails = async (req, res) => {
   try {
@@ -98,20 +116,28 @@ const renderOrderDetails = async (req, res) => {
       return res.status(404).send("Product not found in this order");
     }
 
-    // Calculate the final price for the specific item, including offers
-    let finalPrice = specificItem.productId.price;
+    let basePrice = specificItem.productId.price;
+    let finalPrice = basePrice;
 
     // Check if there's a product offer for the product
     const productOffer = await ProductOffer.findOne({ product: productId });
     if (productOffer) {
-      finalPrice = specificItem.productId.price - (specificItem.productId.price * (productOffer.discountPercentage / 100));
+      finalPrice = basePrice - (basePrice * (productOffer.discountPercentage / 100));
     }
 
     // Check if there's a category offer for the product's category
     const categoryOffer = await CategoryOffer.findOne({ category: specificItem.productId.category });
     if (categoryOffer) {
-      const categoryDiscount = specificItem.productId.price * (categoryOffer.discountPercentage / 100);
-      finalPrice = Math.min(finalPrice, specificItem.productId.price - categoryDiscount);
+      const categoryDiscount = basePrice * (categoryOffer.discountPercentage / 100);
+      finalPrice = Math.min(finalPrice, basePrice - categoryDiscount);
+    }
+
+    // Apply coupon if available
+    if (order.coupon) {
+      const coupon = await Coupon.findOne({ code: order.coupon });
+      if (coupon) {
+        finalPrice = basePrice - (basePrice * (coupon.discountPercentage / 100));
+      }
     }
 
     const itemWithFinalPrice = {
@@ -129,6 +155,7 @@ const renderOrderDetails = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+
 
 
 const approveReturn = async (req, res) => {
@@ -151,6 +178,34 @@ const approveReturn = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Item is not in return pending status' });
     }
 
+    // Calculate the final price for this item
+    let basePrice = item.productId.price;
+    let finalPrice = basePrice;
+
+    // Check for product offer
+    const productOffer = await ProductOffer.findOne({ product: productId });
+    if (productOffer) {
+      finalPrice = basePrice - (basePrice * (productOffer.discountPercentage / 100));
+    }
+
+    // Check for category offer
+    const categoryOffer = await CategoryOffer.findOne({ category: item.productId.category });
+    if (categoryOffer) {
+      const categoryDiscount = basePrice * (categoryOffer.discountPercentage / 100);
+      finalPrice = Math.min(finalPrice, basePrice - categoryDiscount);
+    }
+
+    // Apply coupon if available
+    if (order.coupon) {
+      const coupon = await Coupon.findOne({ code: order.coupon });
+      if (coupon) {
+        finalPrice = finalPrice - (finalPrice * (coupon.discountPercentage / 100));
+      }
+    }
+
+    // Calculate the total amount to refund for this item
+    const amountToCredit = finalPrice * item.quantity;
+
     // Update the status of the specific item
     item.status = 'Returned';
 
@@ -163,19 +218,17 @@ const approveReturn = async (req, res) => {
     await order.save();
 
     // Credit the amount back to user's wallet
-    const amountToCredit = item.productPrice * item.quantity; // Calculate the amount to credit
     const wallet = await Wallet.findOne({ userId: order.user._id });
 
     if (wallet) {
-      wallet.balance += amountToCredit; // Update the wallet balance
+      wallet.balance += amountToCredit;
       wallet.transactions.push({
         amount: amountToCredit,
         transactionMethod: "Refund",
         date: new Date()
       });
-      await wallet.save(); // Save the updated wallet
+      await wallet.save();
     } else {
-      // If the wallet doesn't exist, create a new one
       const newWallet = new Wallet({
         userId: order.user._id,
         balance: amountToCredit,
@@ -237,16 +290,6 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-
-
-
-// Example route setup (using Express.js)
-
-  
-
-
-
-  
 
 module.exports = {
     renderOrders,

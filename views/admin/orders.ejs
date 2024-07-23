@@ -1,6 +1,5 @@
 <%- include('../adminLayouts/header.ejs') %>
 <%- include('../adminLayouts/sidenavbar.ejs') %>
-
 <div class="body-wrapper">
   <header class="app-header">
     <nav class="navbar navbar-expand-lg navbar-light">
@@ -73,9 +72,9 @@
               <td><%= order._id %></td>
               <td><img src="/productImage/<%= item.productId.images[0] %>" alt="Product Image" width="50" height="50"></td>
               <td><%= item.productId.name %></td>
-              <td>₹<%= item.finalPrice %></td>
+              <td>₹<%= item.price.toFixed(2) %></td> <!-- Display price after discount -->
               <td><%= item.quantity %></td>
-              <td>₹<%= (item.finalPrice * item.quantity).toFixed(2) %></td>
+              <td>₹<%= item.itemTotal.toFixed(2) %></td> <!-- Display total after discount -->
               <td>
                 <% if (item.status === 'Processing') { %>
                   <span class="badge bg-warning text-dark"><%= item.status %></span>

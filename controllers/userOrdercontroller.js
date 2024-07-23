@@ -1,13 +1,12 @@
 const Order = require('../model/orderModel');
 const Coupon = require('../model/couponModel')
 const Product = require('../model/productModel');
-const User = require('../model/userModel'); // Add this line to import the User model
-const Wallet = require('../model/walletModel'); // Add this line to import the Wallet model
+const User = require('../model/userModel'); 
+const Wallet = require('../model/walletModel');
 const crypto = require('crypto');
 
 const ProductOffer = require('../model/productOfferModel');
 const CategoryOffer = require('../model/categoryOfferModel');
-// userOrdercontroller
 
 const Razorpay = require('razorpay');
 
@@ -18,6 +17,8 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
+
+// user order controller
 
 const renderOrderdetails = async (req, res) => {
   try {
@@ -58,63 +59,36 @@ const renderOrderdetails = async (req, res) => {
       finalPrice = Math.min(finalPrice, selectedItem.productId.price - categoryDiscount);
     }
 
-    selectedItem.finalPrice = parseFloat(finalPrice.toFixed(2));
+    // Apply coupon discount if applicable
+    let couponDiscount = 0;
+    if (order.coupon) {
+      const coupon = await Coupon.findOne({ code: order.coupon });
+      if (coupon) {
+        const orderTotal = order.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0);
+        if (orderTotal >= parseFloat(coupon.priceRange.split(' - ')[0]) && 
+            orderTotal <= parseFloat(coupon.priceRange.split(' - ')[1])) {
+          couponDiscount = finalPrice * (coupon.discountPercentage / 100);
+          finalPrice -= couponDiscount;
+        }
+      }
+    }
 
-    res.render('orderDetails', { order, selectedItem, selectedAddress, loggedIn, currentUrl: req.path });
+    selectedItem.finalPrice = parseFloat(finalPrice.toFixed(2));
+    selectedItem.couponDiscount = parseFloat(couponDiscount.toFixed(2));
+
+    res.render('orderDetails', { 
+      order, 
+      selectedItem, 
+      selectedAddress, 
+      loggedIn, 
+      currentUrl: req.path,
+      couponDiscount: couponDiscount.toFixed(2)
+    });
   } catch (error) {
     console.error('Error rendering order details page:', error);
     res.status(500).send('Internal Server Error');
   }
-};
-
-
-const returnItem = async (req, res) => {
-  try {
-    console.log("Return item request received");
-    const { orderId, itemId, productId, reason } = req.body;
-    let order = await Order.findById(orderId).populate('items.productId');
-
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
-
-    const item = order.items.find(item => item._id.toString() === itemId && item.productId._id.toString() === productId);
-    if (!item) {
-      return res.status(404).json({ success: false, message: 'Item not found in order' });
-    }
-
-    if (item.status !== 'Delivered') {
-      return res.status(400).json({ success: false, message: 'Only delivered items can be returned' });
-    }
-
-    // Calculate final price considering offers
-    let finalPrice = item.productId.price;
-    const productOffer = await ProductOffer.findOne({ product: item.productId._id });
-    const categoryOffer = await CategoryOffer.findOne({ category: item.productId.category });
-
-    if (productOffer) {
-      finalPrice = item.productId.price - (item.productId.price * (productOffer.discountPercentage / 100));
-    }
-
-    if (categoryOffer) {
-      const categoryDiscount = item.productId.price * (categoryOffer.discountPercentage / 100);
-      finalPrice = Math.min(finalPrice, item.productId.price - categoryDiscount);
-    }
-
-    item.finalPrice = parseFloat(finalPrice.toFixed(2));
-
-    item.status = 'Pending Return';
-    item.returnReason = reason;
-    order.hasRequest = true;
-    await order.save();
-
-    res.json({ success: true, message: 'Item return request submitted successfully' });
-  } catch (err) {
-    console.error('Error returning item:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
+}
 
 const cancelItem = async (req, res) => {
   try {
@@ -147,6 +121,20 @@ const cancelItem = async (req, res) => {
     if (categoryOffer) {
       const categoryDiscount = item.productId.price * (categoryOffer.discountPercentage / 100);
       finalPrice = Math.min(finalPrice, item.productId.price - categoryDiscount);
+    }
+
+    // Apply coupon discount if applicable
+    let couponDiscount = 0;
+    if (order.coupon) {
+      const coupon = await Coupon.findOne({ code: order.coupon });
+      if (coupon) {
+        const orderTotal = order.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0);
+        if (orderTotal >= parseFloat(coupon.priceRange.split(' - ')[0]) && 
+            orderTotal <= parseFloat(coupon.priceRange.split(' - ')[1])) {
+          couponDiscount = finalPrice * (coupon.discountPercentage / 100);
+          finalPrice -= couponDiscount;
+        }
+      }
     }
 
     item.finalPrice = parseFloat(finalPrice.toFixed(2));
@@ -213,6 +201,66 @@ const cancelItem = async (req, res) => {
 };
 
 
+const returnItem = async (req, res) => {
+  try {
+    console.log("Return item request received");
+    const { orderId, itemId, productId, reason } = req.body;
+    let order = await Order.findById(orderId).populate('items.productId');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const item = order.items.find(item => item._id.toString() === itemId && item.productId._id.toString() === productId);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Item not found in order' });
+    }
+
+    if (item.status !== 'Delivered') {
+      return res.status(400).json({ success: false, message: 'Only delivered items can be returned' });
+    }
+
+    // Calculate final price considering offers
+    let finalPrice = item.productId.price;
+    const productOffer = await ProductOffer.findOne({ product: item.productId._id });
+    const categoryOffer = await CategoryOffer.findOne({ category: item.productId.category });
+
+    if (productOffer) {
+      finalPrice = item.productId.price - (item.productId.price * (productOffer.discountPercentage / 100));
+    }
+
+    if (categoryOffer) {
+      const categoryDiscount = item.productId.price * (categoryOffer.discountPercentage / 100);
+      finalPrice = Math.min(finalPrice, item.productId.price - categoryDiscount);
+    }
+
+    // Apply coupon discount if applicable
+    let couponDiscount = 0;
+    if (order.coupon) {
+      const coupon = await Coupon.findOne({ code: order.coupon });
+      if (coupon) {
+        const orderTotal = order.items.reduce((sum, item) => sum + (item.productId.price * item.quantity), 0);
+        if (orderTotal >= parseFloat(coupon.priceRange.split(' - ')[0]) && 
+            orderTotal <= parseFloat(coupon.priceRange.split(' - ')[1])) {
+          couponDiscount = finalPrice * (coupon.discountPercentage / 100);
+          finalPrice -= couponDiscount;
+        }
+      }
+    }
+
+    item.finalPrice = parseFloat(finalPrice.toFixed(2));
+
+    item.status = 'Pending Return';
+    item.returnReason = reason;
+    order.hasRequest = true;
+    await order.save();
+
+    res.json({ success: true, message: 'Item return request submitted successfully' });
+  } catch (err) {
+    console.error('Error returning item:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
 
 const renderUserorder = async (req, res) => {
   try {
@@ -231,7 +279,7 @@ const renderUserorder = async (req, res) => {
     // Process orders to calculate final prices and apply coupon discounts
     const ordersWithFinalPrice = await Promise.all(
       orders.map(async (order) => {
-        const coupon = order.couponCode ? await Coupon.findOne({ code: order.couponCode }) : null;
+        const coupon = order.coupon ? await Coupon.findOne({ code: order.coupon }) : null;
 
         const items = await Promise.all(
           order.items.map(async (item) => {
@@ -310,6 +358,7 @@ const renderUserorder = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+
 
 
 const createRazorpayOrder = async (req, res) => {

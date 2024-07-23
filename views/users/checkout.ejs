@@ -38,7 +38,7 @@
               <div class="row align-items-end">
                 <div class="col-md-12">
                   <div class="form-group">
-                    <label for="country">State</label>
+                    <label for="state">State</label>
                     <input type="text" class="form-control" name="state"
                       value="<%= selectedAddress && selectedAddress.state ? selectedAddress.state : '' %>" readonly>
                   </div>
@@ -46,7 +46,7 @@
                 <div class="w-100"></div>
                 <div class="col-md-12">
                   <div class="form-group">
-                    <label for="streetaddress">Street Address</label>
+                    <label for="address">Street Address</label>
                     <input type="text" class="form-control" name="address"
                       value="<%= selectedAddress && selectedAddress.address ? selectedAddress.address : '' %>" readonly>
                   </div>
@@ -54,30 +54,29 @@
                 <div class="w-100"></div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label for="towncity">Town / City</label>
+                    <label for="city">Town / City</label>
                     <input type="text" class="form-control" name="city"
                       value="<%= selectedAddress && selectedAddress.city ? selectedAddress.city : '' %>" readonly>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label for="postcodezip">Postcode / ZIP *</label>
+                    <label for="postalCode">Postcode / ZIP *</label>
                     <input type="text" class="form-control" name="postalCode"
                       value="<%= selectedAddress && selectedAddress.postalCode ? selectedAddress.postalCode : '' %>" readonly>
                   </div>
                 </div>
               </div>
 
-
               <div class="row mt-5 pt-3 d-flex">
                 <div class="col-md-6">
                   <div class="cart-detail cart-total bg-light p-3 p-md-4 h-100">
-                    <h3 class="billing-heading mb-4">ORDERS</h3>
-                    <% let total = 0; if (cart && cart.items && cart.items.length > 0) { %>
+                    <h3 class="billing-heading mb-4">ORDER SUMMARY</h3>
+                    <% let subtotal = 0; if (cart && cart.items && cart.items.length > 0) { %>
                       <% cart.items.forEach(item => {
                         if (item.productId) {
                           const itemTotal = item.quantity * item.productPrice;
-                          total += itemTotal;
+                          subtotal += itemTotal;
                       %>
                         <p class="d-flex">
                           <span><%= item.productName %></span>
@@ -87,9 +86,19 @@
                       <% } }) %>
                       <hr>
                       <p class="d-flex total-price">
-                        <span>Total</span>
+                        <span>Subtotal</span>
                         <span></span>
-                        <span id="totalAmount"><%= total.toFixed(2) %></span>
+                        <span id="subtotalAmount"><%= subtotal.toFixed(2) %></span>
+                      </p>
+                      <p class="d-flex discount-amount" id="discountRow" style="display: none;">
+                        <span>Discount</span>
+                        <span></span>
+                        <span id="discountAmount">0.00</span>
+                      </p>
+                      <p class="d-flex total-price">
+                        <span><strong>Total</strong></span>
+                        <span></span>
+                        <span id="totalAmount"><strong><%= subtotal.toFixed(2) %></strong></span>
                       </p>
                     <% } else { %>
                       <p class="d-flex">
@@ -128,7 +137,7 @@
                         </div>
                       </div>
                     </div>
-                    <input type="hidden" name="amount" id="amount" value="<%= total.toFixed(2) %>">
+                    <input type="hidden" name="amount" id="amount" value="<%= subtotal.toFixed(2) %>">
                     <div class="form-group">
                       <label for="couponCode">Coupon Code</label>
                       <input type="text" class="form-control" id="couponCode" name="couponCode" placeholder="Enter coupon code">
@@ -138,13 +147,12 @@
                   </div>
                 </div>
               </div>
-
-              
             </form>
           </div>
         </div>
       </div>
     </section>
+
 
 
     
@@ -160,76 +168,43 @@
 
 
 <script>
- document.addEventListener('DOMContentLoaded', function () {
-    const placeOrderBtn = document.getElementById('placeOrderBtn');
-    if (placeOrderBtn) {
-      placeOrderBtn.addEventListener('click', handlePlaceOrder);
-    } else {
-      console.error('Element with id "placeOrderBtn" not found');
-    }
-
-    // Configure Toastr options
-    toastr.options = {
-      "closeButton": true,
-      "debug": false,
-      "newestOnTop": false,
-      "progressBar": true,
-      "positionClass": "toast-top-right",
-      "preventDuplicates": false,
-      "onclick": null,
-      "showDuration": "300",
-      "hideDuration": "1000",
-      "timeOut": "5000",
-      "extendedTimeOut": "1000",
-      "showEasing": "swing",
-      "hideEasing": "linear",
-      "showMethod": "fadeIn",
-      "hideMethod": "fadeOut"
-    };
-  });
+  document.addEventListener('DOMContentLoaded', function () {
+  const applyCouponBtn = document.getElementById('applyCouponBtn');
+  const placeOrderBtn = document.getElementById('placeOrderBtn');
   
-
-const applyCouponBtn = document.getElementById('applyCouponBtn');
   if (applyCouponBtn) {
     applyCouponBtn.addEventListener('click', handleApplyCoupon);
-  } else {
-    console.error('Element with id "applyCouponBtn" not found');
   }
-
   
-  async function applyCouponCode(couponCode, orderTotal) {
-  console.log("Applying coupon:", couponCode, "Order total:", orderTotal);
-  try {
-    const response = await fetch('/apply-coupon', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ couponCode, orderTotal })
-    });
-
-    console.log("Response status:", response.status);
-    const data = await response.json();
-    console.log("Coupon application response:", data);
-
-    if (!data.success) {
-      throw new Error(data.message || 'Coupon application failed');
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error applying coupon:', error);
-    return { success: false, message: error.message };
+  if (placeOrderBtn) {
+    placeOrderBtn.addEventListener('click', handlePlaceOrder);
   }
-}
-
-
+  
+  // Configure Toastr options
+  toastr.options = {
+    "closeButton": true,
+    "debug": false,
+    "newestOnTop": false,
+    "progressBar": true,
+    "positionClass": "toast-top-right",
+    "preventDuplicates": false,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "5000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut"
+  };
+});
 
 async function handleApplyCoupon() {
   const couponCodeInput = document.getElementById('couponCode');
-  const couponCode = couponCodeInput.value.trim(); // Trim the coupon code
-  const amountInput = document.getElementById('amount');
-  const amount = parseFloat(amountInput.value);
-
-  console.log("Handling apply coupon. Code:", couponCode, "Amount:", amount);
+  const couponCode = couponCodeInput.value.trim();
+  const subtotalElement = document.getElementById('subtotalAmount');
+  const subtotal = parseFloat(subtotalElement.textContent.replace('$', ''));
 
   if (!couponCode) {
     toastr.error('Please enter a coupon code.');
@@ -237,34 +212,34 @@ async function handleApplyCoupon() {
   }
 
   try {
-    const discountResult = await applyCouponCode(couponCode, amount);
-    console.log("Discount result:", discountResult);
+    const response = await fetch('/apply-coupon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ couponCode, orderTotal: subtotal })
+    });
 
-    if (discountResult.success) {
-      const discountedAmount = parseFloat(discountResult.discountedAmount);
+    const data = await response.json();
 
-      // Update hidden input with discounted amount
-      document.getElementById('amount').value = discountedAmount.toFixed(2);
-      
-      // Update total in "ORDERS" section
-      const totalElement = document.querySelector('.total-price span:last-child');
-      if (totalElement) {
-        totalElement.textContent = discountedAmount.toFixed(2);
-      } else {
-        console.error("Total element not found in ORDERS section");
-      }
-      
-      // Update total in payment method section
-      const paymentTotalElement = document.getElementById('totalAmount');
-      if (paymentTotalElement) {
-        paymentTotalElement.textContent = discountedAmount.toFixed(2);
-      } else {
-        console.error("Total element not found in payment method section");
-      }
-      
+    if (data.success) {
+      const discountAmount = subtotal - parseFloat(data.discountedAmount);
+      const discountedTotal = parseFloat(data.discountedAmount);
+
+      // Update discount row
+      const discountRow = document.getElementById('discountRow');
+      const discountAmountElement = document.getElementById('discountAmount');
+      discountRow.style.display = 'flex';
+      discountAmountElement.textContent = `-${discountAmount.toFixed(2)}`;
+
+      // Update total amount
+      const totalAmountElement = document.getElementById('totalAmount');
+      totalAmountElement.innerHTML = `<strong>${discountedTotal.toFixed(2)}</strong>`;
+
+      // Update hidden input
+      document.getElementById('amount').value = discountedTotal.toFixed(2);
+
       toastr.success('Coupon applied successfully.');
     } else {
-      toastr.error(discountResult.message || 'Failed to apply coupon.');
+      toastr.error(data.message || 'Failed to apply coupon.');
     }
   } catch (error) {
     console.error('Error applying coupon:', error);
@@ -272,18 +247,16 @@ async function handleApplyCoupon() {
   }
 }
 
-
-
 async function handlePlaceOrder() {
   const form = document.getElementById('paymentForm');
   const formData = new FormData(form);
   const paymentMethod = formData.get('paymentMethod');
-  let amount = parseFloat(formData.get('amount')); // This should already be the discounted amount
+  let amount = parseFloat(formData.get('amount'));
   const couponCode = formData.get('couponCode').trim();
   const address = formData.get('address');
 
   console.log("Payment Method:", paymentMethod);
-  console.log("Final Amount (already discounted):", amount);
+  console.log("Final Amount:", amount);
   console.log("Coupon Code:", couponCode);
   console.log("Address:", address);
 
@@ -292,7 +265,6 @@ async function handlePlaceOrder() {
   }
 
   try {
-    // Remove the coupon application logic from here
     console.log("Proceeding with payment, Amount:", amount);
     await proceedWithPayment(paymentMethod, amount);
   } catch(error) {
@@ -300,7 +272,6 @@ async function handlePlaceOrder() {
     toastr.error('An error occurred while processing your order. Please try again.');
   }
 }
-
 
 function validateOrder(address, paymentMethod, amount) {
   if (!address) {
@@ -335,100 +306,71 @@ async function proceedWithPayment(paymentMethod, amount) {
   }
 }
 
-
 async function initiateRazorpayPayment(amount) {
-    console.log("Initiating Razorpay payment with amount:", amount);
-    try {
-      if (!amount || isNaN(amount) || amount <= 0) {
-        throw new Error('Invalid amount. Please enter a valid amount.');
-      }
-
-      const response = await fetch('/create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: parseFloat(amount) })
-      });
-
-      if (!response.ok) throw new Error('Network response was not ok');
-      const data = await response.json();
-      console.log("Received payment creation response:", data);
-
-      const options = {
-        key: data.key, // Use the key from the server response
-        amount: data.amount,
-        currency: 'INR',
-        name: 'FOXHUB',
-        description: 'Payment for your order',
-        order_id: data.id,
-        handler: function (response) {
-          handleRazorpayResponse(response, data.id);
-        },
-        modal: {
-          ondismiss: function() {
-            const state = document.querySelector('input[name="state"]').value;
-            const address = document.querySelector('input[name="address"]').value;
-            const city = document.querySelector('input[name="city"]').value;
-            const postalCode = document.querySelector('input[name="postalCode"]').value;
-            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-            const couponCode = document.querySelector('input[name="couponCode"]').value;
-
-            handlePaymentFailure(data.id, state, address, city, postalCode, paymentMethod, couponCode);
-          }
-        }
-      };
-
-      const rzp = new Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error('Error creating payment:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Payment Error',
-        text: 'Error creating payment. Please try again.',
-        confirmButtonText: 'OK'
-      });
+  console.log("Initiating Razorpay payment with amount:", amount);
+  try {
+    if (!amount || isNaN(amount) || amount <= 0) {
+      throw new Error('Invalid amount. Please enter a valid amount.');
     }
-}
 
-
-
-
-  function handlePaymentFailure(orderId, state, address, city, postalCode, paymentMethod, couponCode) {
-    console.log('Payment failed or modal dismissed');
-    fetch('/handle-failed-razorpay-payment', {
+    const response = await fetch('/create-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, state, address, city, postalCode, paymentMethod, couponCode })
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Payment Failed',
-            text: 'Your payment was not successful. The order status has been set to pending.',
-            confirmButtonText: 'View Orders'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              window.location.href = '/userOrders';
-            }
-          });
-        } else {
-          throw new Error(data.message || 'Failed to process order failure');
+      body: JSON.stringify({ amount: parseFloat(amount) })
+    });
+
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    console.log("Received payment creation response:", data);
+
+    const options = {
+      key: data.key,
+      amount: data.amount,
+      currency: 'INR',
+      name: 'FOXHUB',
+      description: 'Payment for your order',
+      order_id: data.id,
+      handler: function (response) {
+        handleRazorpayResponse(response, data.id);
+      },
+      modal: {
+        ondismiss: function() {
+          handlePaymentFailure(data.id);
         }
-      })
-      .catch(error => {
-        console.error('Error handling payment failure:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'An error occurred while processing your order. Please check your orders page for status.',
-          confirmButtonText: 'View Orders'
-        }).then(() => {
-          window.location.href = '/userOrders';
-        });
-      });
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch (error) {
+    console.error('Error creating payment:', error);
+    toastr.error('Error creating payment. Please try again.');
   }
+}
+
+function handlePaymentFailure(orderId) {
+  console.log('Payment failed or modal dismissed');
+  fetch('/handle-failed-razorpay-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderId })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        toastr.warning('Your payment was not successful. The order status has been set to pending.');
+        setTimeout(() => window.location.href = '/userOrders', 3000);
+      } else {
+        throw new Error(data.message || 'Failed to process order failure');
+      }
+    })
+    .catch(error => {
+      console.error('Error handling payment failure:', error);
+      toastr.error('An error occurred while processing your order. Please check your orders page for status.');
+      setTimeout(() => window.location.href = '/userOrders', 3000);
+    });
+}
+
 async function handleRazorpayResponse(response, orderId) {
   try {
     response.order_id = orderId;
@@ -443,58 +385,13 @@ async function handleRazorpayResponse(response, orderId) {
     if (data.status === 'success') {
       document.getElementById('paymentForm').submit();
     } else {
-      Swal.fire({
-        icon: 'error',
-        title: 'Payment Failed',
-        text: 'Payment verification failed. Please try again.',
-        confirmButtonText: 'OK'
-      });
+      toastr.error('Payment verification failed. Please try again.');
     }
   } catch (error) {
     console.error('Error verifying payment:', error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Payment Error',
-      text: 'Error verifying payment. Please try again.',
-      confirmButtonText: 'OK'
-    });
+    toastr.error('Error verifying payment. Please try again.');
   }
 }
-
-var rzp1 = new Razorpay(options);
-console.log('rzp1:', rzp1);
-
-rzp1.on('payment.failed', function (response){
-  console.log(response.error.code);
-  console.log(response.error.description);
-  console.log(response.error.source);
-  console.log(response.error.step);
-  console.log(response.error.reason);
-  console.log(response.error.metadata.order_id);
-  console.log(response.error.metadata.payment_id);
-
-  // Call your server to update the order status
-  fetch('/handle-failed-razorpay-payment', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ orderId: response.error.metadata.order_id })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      alert('Payment failed. Your order status has been updated.');
-      window.location.href = '/userOrders';
-    } else {
-      alert('Payment failed. Please try again or contact support.');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('An error occurred. Please try again or contact support.');
-  });
-});
-
-rzp1.open();
 
 async function checkWalletBalanceAndSubmitForm(amount) {
   console.log("Checking wallet balance for amount:", amount);

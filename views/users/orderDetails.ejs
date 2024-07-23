@@ -1,12 +1,10 @@
 <%- include('../layouts/header.ejs') %>
 <%- include('../layouts/navbar.ejs') %>
-<!-- orderDetails.ejs -->
 <link rel="stylesheet" href="/css/sidebar.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-<!-- Add these scripts in the head section or just before the closing body tag -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
@@ -122,15 +120,21 @@
   
   
 </div>
+
+
+
 <script src="https://orderDetails.razorpay.com/v1/orderDetails.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-  <!-- Debugging logs -->
-  <script>
+
+
+<script>
     console.log('selectedItem.status:', '<%= selectedItem.status %>');
     console.log('order.paymentMethod:', '<%= order.paymentMethod %>');
     console.log('order._id:', '<%= order._id %>');
     console.log('order.totalAmount:', '<%= order.totalAmount %>');
   </script>
+
+  
 <script>
   document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM fully loaded');
