@@ -20,12 +20,15 @@ const renderCheckout = async (req, res) => {
   try {
     const userId = req.session.user_id;
 
+    // Redirect to login if user is not authenticated
     if (!userId) {
       return res.redirect('/login');
     }
 
+    // Fetch the user's cart with product details populated
     const cart = await Cart.findOne({ userId }).populate('items.productId');
 
+    // If cart is empty, render checkout with empty cart data
     if (!cart || cart.items.length === 0) {
       return res.render('checkout', { cart: [], selectedAddress: null, discountedAmount: 0 });
     }
@@ -94,6 +97,7 @@ const renderCheckout = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+
 
 const handleWalletPayment = async (userId, finalPrice) => {
   try {

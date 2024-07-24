@@ -195,6 +195,7 @@
     "hideMethod": "fadeOut"
   };
 });
+
 async function handleApplyCoupon() {
   const couponCodeInput = document.getElementById('couponCode');
   const couponCode = couponCodeInput.value.trim();
@@ -206,11 +207,13 @@ async function handleApplyCoupon() {
     return;
   }
 
+  const selectedAddressIndex = document.querySelector('input[name="address"]:checked').value;
+
   try {
     const response = await fetch('/apply-coupon', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ couponCode, orderTotal: subtotal })
+      body: JSON.stringify({ couponCode, orderTotal: subtotal, selectedAddress: selectedAddressIndex })
     });
 
     const data = await response.json();
@@ -241,6 +244,7 @@ async function handleApplyCoupon() {
     toastr.error('An error occurred while applying the coupon. Please try again later.');
   }
 }
+
 
 
 async function handlePlaceOrder() {
