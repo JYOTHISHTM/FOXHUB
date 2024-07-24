@@ -164,23 +164,37 @@ const placeOrder = async (req, res) => {
 
     if (couponCode) {
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const response = await fetch(`${baseUrl}/apply-coupon`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ couponCode, orderTotal: totalAmount })
-      });
+      try {
+        const response = await fetch(`${baseUrl}/apply-coupon`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ couponCode, orderTotal: totalAmount })
+        });
 
-      const data = await response.json();
-      console.log("Coupon apply response:", data);
+        if (!response.ok) {
+          console.log("Coupon apply request failed:", response.status, response.statusText);
+          throw new Error('Failed to apply coupon');
+        }
 
-      if (data.success) {
-        discountedAmount = data.discountedAmount;
-      } else {
-        console.log("Coupon code invalid or not applicable");
+        const data = await response.json();
+        console.log("Coupon apply response:", data);
+
+        if (data.success) {
+          discountedAmount = data.discountedAmount;
+        } else {
+          console.log("Coupon code invalid or not applicable");
+          return res.render('checkout', {
+            errorMessage: 'Invalid coupon code. Please try again.',
+            addressError: false,
+            paymentMethodError: false
+          });
+        }
+      } catch (error) {
+        console.log("Error applying coupon:", error.message);
         return res.render('checkout', {
-          errorMessage: 'Invalid coupon code. Please try again.',
+          errorMessage: 'Error applying coupon. Please try again.',
           addressError: false,
           paymentMethodError: false
         });
@@ -205,7 +219,7 @@ const placeOrder = async (req, res) => {
         totalAmount: discountedAmount,
         address: { state, address, city, postalCode },
         paymentMethod,
-        razorpayOrderId: razorpayResponse.id, // Make sure this is set
+        razorpayOrderId: razorpayResponse.id, 
         status: 'Pending',
         coupon: couponCode
       });
@@ -214,21 +228,14 @@ const placeOrder = async (req, res) => {
       console.log('Razorpay order saved:', order);
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      
       for (let item of validItems) {
         const product = await Product.findById(item.productId);
         if (product) {
           const newQuantity = product.quantity - item.quantity;
-          if (newQuantity < 0) {
-            newQuantity = 0;
-          }
-          product.quantity = newQuantity;
+          product.quantity = Math.max(newQuantity, 0);
           await product.save(); 
         }
       }
-
-      
-
 
       return res.redirect(`/thankyou/${order._id}`);
     } else if (paymentMethod === 'Cash on Delivery') {
@@ -248,10 +255,7 @@ const placeOrder = async (req, res) => {
         const product = await Product.findById(item.productId);
         if (product) {
           const newQuantity = product.quantity - item.quantity;
-          if (newQuantity < 0) {
-            newQuantity = 0;
-          }
-          product.quantity = newQuantity;
+          product.quantity = Math.max(newQuantity, 0);
           await product.save(); 
         }
       }
@@ -283,10 +287,7 @@ const placeOrder = async (req, res) => {
         const product = await Product.findById(item.productId);
         if (product) {
           const newQuantity = product.quantity - item.quantity;
-          if (newQuantity < 0) {
-            newQuantity = 0;
-          }
-          product.quantity = newQuantity;
+          product.quantity = Math.max(newQuantity, 0);
           await product.save(); 
         }
       }
@@ -304,6 +305,7 @@ const placeOrder = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+
 
 
 
