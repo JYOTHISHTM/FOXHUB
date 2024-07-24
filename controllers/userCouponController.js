@@ -50,11 +50,13 @@ const applyCoupon = async (req, res) => {
     }
 
     const parsedOrderTotal = parseFloat(orderTotal);
+
     if (isNaN(parsedOrderTotal) || parsedOrderTotal <= 0) {
       console.log("Invalid order total:", orderTotal);
       return res.status(400).json({ success: false, message: 'Invalid order total.' });
     }
 
+    // Trim the coupon code on the server-side as well
     const trimmedCouponCode = couponCode.trim();
 
     const coupon = await Coupon.findOne({ code: trimmedCouponCode });
@@ -88,8 +90,8 @@ const applyCoupon = async (req, res) => {
       message: 'Coupon applied successfully.'
     });
   } catch (error) {
-    console.error('Error applying coupon:', error);
-    return res.status(500).json({ success: false, message: 'An error occurred while applying the coupon. Please try again later.' });
+    console.error('Error applying coupon:', error.message);
+    return res.status(500).json({ success: false, message: `An error occurred while applying the coupon: ${error.message}. Please try again later.` });
   }
 };
 
