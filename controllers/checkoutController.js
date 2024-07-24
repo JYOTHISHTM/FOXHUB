@@ -224,13 +224,9 @@ const placeOrder = async (req, res) => {
         const razorpayResponse = await razorpay.orders.create(options);
         console.log("Razorpay response:", razorpayResponse);
 
-        const order = new Order({
+        order = new Order({
           user: userId,
-          items: validItems.map(item => ({
-            productId: item.productId._id,
-            quantity: item.quantity,
-            productPrice: item.productId.price
-          })),
+          items: validItems,
           totalAmount: discountedAmount,
           address: { state, address, city, postalCode },
           paymentMethod,
@@ -241,14 +237,11 @@ const placeOrder = async (req, res) => {
 
         await order.save();
         console.log('Razorpay order saved:', order);
-
-        return res.json({
-          success: true,
+        return res.render('checkout', {
           razorpayOrderId: razorpayResponse.id,
           amount: discountedAmount,
           orderId: order._id
         });
-
 
       case 'Cash on Delivery':
         order = new Order({
