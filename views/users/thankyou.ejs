@@ -88,9 +88,7 @@
     <div class="order-details" style="color: green;">
       Your order has been successfully placed! Thank you for shopping with us.
     </div>
-    <p>Order ID: <%= order._id ? order._id : order.razorpayOrderId %></p>
-
-
+    <p>Order ID: <%= order._id %></p>
     <div class="button-container">
       <button onclick="location.href='/shop'">SHOP MORE</button>
       <button onclick="location.href='/userOrders'">MY ORDERS</button>
