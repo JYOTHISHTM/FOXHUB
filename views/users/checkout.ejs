@@ -197,43 +197,85 @@
 });
 
 async function handleApplyCoupon() {
+  // Get and validate coupon code input
   const couponCodeInput = document.getElementById('couponCode');
+  if (!couponCodeInput) {
+    console.error('Coupon code input not found');
+    toastr.error('An error occurred. Please try again later.');
+    return;
+  }
   const couponCode = couponCodeInput.value.trim();
-  const subtotalElement = document.getElementById('subtotalAmount');
-  const subtotal = parseFloat(subtotalElement.textContent.replace('$', ''));
-
   if (!couponCode) {
     toastr.error('Please enter a coupon code.');
     return;
   }
 
-  const selectedAddressIndex = document.querySelector('input[name="address"]:checked').value;
+  // Get and validate subtotal
+  const subtotalElement = document.getElementById('subtotalAmount');
+  if (!subtotalElement) {
+    console.error('Subtotal element not found');
+    toastr.error('An error occurred. Please try again later.');
+    return;
+  }
+  const subtotal = parseFloat(subtotalElement.textContent.replace('$', ''));
+  if (isNaN(subtotal)) {
+    console.error('Invalid subtotal value');
+    toastr.error('An error occurred. Please try again later.');
+    return;
+  }
+
+  // Get and validate selected address
+  const selectedAddressRadio = document.querySelector('input[name="address"]:checked');
+  if (!selectedAddressRadio) {
+    toastr.error('Please select an address.');
+    return;
+  }
+  const selectedAddressIndex = selectedAddressRadio.value;
 
   try {
+    // Send request to apply coupon
     const response = await fetch('/apply-coupon', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ couponCode, orderTotal: subtotal, selectedAddress: selectedAddressIndex })
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
 
     if (data.success) {
+      // Calculate discount and update UI
       const discountAmount = subtotal - parseFloat(data.discountedAmount);
       const discountedTotal = parseFloat(data.discountedAmount);
 
       // Update discount row
       const discountRow = document.getElementById('discountRow');
       const discountAmountElement = document.getElementById('discountAmount');
-      discountRow.style.display = 'flex';
-      discountAmountElement.textContent = `-${discountAmount.toFixed(2)}`;
+      if (discountRow && discountAmountElement) {
+        discountRow.style.display = 'flex';
+        discountAmountElement.textContent = `-$${discountAmount.toFixed(2)}`;
+      } else {
+        console.error('Discount row or amount element not found');
+      }
 
       // Update total amount
       const totalAmountElement = document.getElementById('totalAmount');
-      totalAmountElement.innerHTML = `<strong>${discountedTotal.toFixed(2)}</strong>`;
+      if (totalAmountElement) {
+        totalAmountElement.innerHTML = `<strong>$${discountedTotal.toFixed(2)}</strong>`;
+      } else {
+        console.error('Total amount element not found');
+      }
 
       // Update hidden input
-      document.getElementById('amount').value = discountedTotal.toFixed(2);
+      const amountInput = document.getElementById('amount');
+      if (amountInput) {
+        amountInput.value = discountedTotal.toFixed(2);
+      } else {
+        console.error('Amount input not found');
+      }
 
       toastr.success('Coupon applied successfully.');
     } else {
@@ -244,6 +286,16 @@ async function handleApplyCoupon() {
     toastr.error('An error occurred while applying the coupon. Please try again later.');
   }
 }
+
+// Attach the function to the button click event
+document.addEventListener('DOMContentLoaded', () => {
+  const applyCouponButton = document.getElementById('applyCouponButton');
+  if (applyCouponButton) {
+    applyCouponButton.addEventListener('click', handleApplyCoupon);
+  } else {
+    console.error('Apply coupon button not found');
+  }
+});
 
 
 
