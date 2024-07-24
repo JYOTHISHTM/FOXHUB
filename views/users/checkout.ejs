@@ -195,8 +195,9 @@
     "hideMethod": "fadeOut"
   };
 });
-
 async function handleApplyCoupon() {
+  console.log('handleApplyCoupon function called');
+
   // Get and validate coupon code input
   const couponCodeInput = document.getElementById('couponCode');
   if (!couponCodeInput) {
@@ -209,6 +210,7 @@ async function handleApplyCoupon() {
     toastr.error('Please enter a coupon code.');
     return;
   }
+  console.log('Coupon code:', couponCode);
 
   // Get and validate subtotal
   const subtotalElement = document.getElementById('subtotalAmount');
@@ -217,22 +219,35 @@ async function handleApplyCoupon() {
     toastr.error('An error occurred. Please try again later.');
     return;
   }
-  const subtotal = parseFloat(subtotalElement.textContent.replace('$', ''));
+  const subtotal = parseFloat(subtotalElement.textContent.replace(/[^0-9.-]+/g, ''));
   if (isNaN(subtotal)) {
     console.error('Invalid subtotal value');
     toastr.error('An error occurred. Please try again later.');
     return;
   }
+  console.log('Subtotal:', subtotal);
 
   // Get and validate selected address
-  const selectedAddressRadio = document.querySelector('input[name="address"]:checked');
-  if (!selectedAddressRadio) {
-    toastr.error('Please select an address.');
-    return;
+  let selectedAddressIndex = 'default';
+  const addressRadios = document.querySelectorAll('input[name="address"]');
+  console.log('Number of address radio buttons found:', addressRadios.length);
+  
+  if (addressRadios.length > 0) {
+    const selectedAddressRadio = document.querySelector('input[name="address"]:checked');
+    if (selectedAddressRadio) {
+      selectedAddressIndex = selectedAddressRadio.value;
+      console.log('Selected address index:', selectedAddressIndex);
+    } else {
+      console.warn('No address selected');
+      toastr.warning('No address selected. Using default.');
+    }
+  } else {
+    console.warn('No address radio buttons found');
+    toastr.warning('Address selection not available. Proceeding with default.');
   }
-  const selectedAddressIndex = selectedAddressRadio.value;
 
   try {
+    console.log('Sending request to apply coupon');
     // Send request to apply coupon
     const response = await fetch('/apply-coupon', {
       method: 'POST',
@@ -245,11 +260,15 @@ async function handleApplyCoupon() {
     }
 
     const data = await response.json();
+    console.log('Server response:', data);
 
     if (data.success) {
       // Calculate discount and update UI
       const discountAmount = subtotal - parseFloat(data.discountedAmount);
       const discountedTotal = parseFloat(data.discountedAmount);
+
+      console.log('Discount amount:', discountAmount);
+      console.log('Discounted total:', discountedTotal);
 
       // Update discount row
       const discountRow = document.getElementById('discountRow');
@@ -287,14 +306,30 @@ async function handleApplyCoupon() {
   }
 }
 
-// Attach the function to the button click event
+// Attach the function to the button click event and set up address selection logging
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded');
   const applyCouponButton = document.getElementById('applyCouponButton');
   if (applyCouponButton) {
     applyCouponButton.addEventListener('click', handleApplyCoupon);
+    console.log('Apply coupon button event listener attached');
   } else {
     console.error('Apply coupon button not found');
   }
+
+  // Log when an address is selected
+  document.body.addEventListener('change', function(event) {
+    if (event.target && event.target.name === 'address') {
+      console.log('Address selected:', event.target.value);
+    }
+  });
+
+  // Log initial state of address selection
+  const addressRadios = document.querySelectorAll('input[name="address"]');
+  console.log('Initial address radio buttons state:');
+  addressRadios.forEach((radio, index) => {
+    console.log(`Address ${index}: ${radio.checked ? 'checked' : 'unchecked'}`);
+  });
 });
 
 
