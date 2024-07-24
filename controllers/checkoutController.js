@@ -135,18 +135,20 @@ const placeOrder = async (req, res) => {
     // Address validation
     if (!state || !address || !city || !postalCode) {
       console.log("Address validation failed");
-      return res.status(400).json({
-        success: false,
-        message: 'Please fill out or select your address details before placing an order.'
+      return res.render('checkout', {
+        errorMessage: 'Please fill out or select your address details before placing an order.',
+        addressError: true,
+        paymentMethodError: false
       });
     }
 
     // Payment method validation
     if (!paymentMethod) {
       console.log("Payment method validation failed");
-      return res.status(400).json({
-        success: false,
-        message: 'Please select a payment method.'
+      return res.render('checkout', {
+        errorMessage: 'Please select a payment method.',
+        addressError: false,
+        paymentMethodError: true
       });
     }
 
@@ -154,10 +156,7 @@ const placeOrder = async (req, res) => {
     const cart = await Cart.findOne({ userId }).populate('items.productId');
     if (!cart || cart.items.length === 0) {
       console.log("Empty cart");
-      return res.status(400).json({
-        success: false,
-        message: 'Your cart is empty. Please add items before placing an order.'
-      });
+      return res.redirect('/cart');
     }
 
     // Calculate total amount
@@ -198,9 +197,10 @@ const placeOrder = async (req, res) => {
             console.log("Discounted amount:", discountedAmount);
           } else {
             console.log("Coupon code invalid or not applicable:", data.message);
-            return res.status(400).json({
-              success: false,
-              message: data.message || 'Invalid coupon code. Please try again.'
+            return res.render('checkout', {
+              errorMessage: data.message || 'Invalid coupon code. Please try again.',
+              addressError: false,
+              paymentMethodError: false
             });
           }
         }
@@ -237,11 +237,10 @@ const placeOrder = async (req, res) => {
 
         await order.save();
         console.log('Razorpay order saved:', order);
-        return res.status(200).json({
-          success: true,
-          message: 'Razorpay order created successfully.',
-          orderId: order._id,
-          razorpayOrderId: razorpayResponse.id
+        return res.render('checkout', {
+          razorpayOrderId: razorpayResponse.id,
+          amount: discountedAmount,
+          orderId: order._id
         });
 
       case 'Cash on Delivery':
@@ -263,9 +262,10 @@ const placeOrder = async (req, res) => {
         const walletPaymentResult = await handleWalletPayment(userId, totalAmount, discountedAmount);
         if (!walletPaymentResult.success) {
           console.log("Wallet payment failed");
-          return res.status(400).json({
-            success: false,
-            message: walletPaymentResult.message || 'Error processing wallet payment. Please try again.'
+          return res.render('checkout', {
+            errorMessage: walletPaymentResult.message || 'Error processing wallet payment. Please try again.',
+            addressError: false,
+            paymentMethodError: true
           });
         }
 
@@ -285,9 +285,10 @@ const placeOrder = async (req, res) => {
 
       default:
         console.log("Invalid payment method selected");
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid payment method selected.'
+        return res.render('checkout', {
+          errorMessage: 'Invalid payment method selected.',
+          addressError: false,
+          paymentMethodError: true
         });
     }
 
@@ -305,18 +306,15 @@ const placeOrder = async (req, res) => {
       await Cart.findOneAndUpdate({ userId }, { items: [] });
     }
 
-    // Return success response
-    return res.status(200).json({
-      success: true,
-      message: 'Order placed successfully.',
-      orderId: order._id
-    });
+    // Redirect to thank you page
+    return res.redirect(`/thankyou/${order._id}`);
 
   } catch (error) {
     console.error('Error placing order:', error);
-    res.status(500).json({
-      success: false,
-      message: 'An error occurred while placing your order. Please try again.'
+    res.render('checkout', {
+      errorMessage: 'An error occurred while placing your order. Please try again.',
+      addressError: false,
+      paymentMethodError: false
     });
   }
 };
