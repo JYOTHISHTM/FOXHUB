@@ -312,95 +312,47 @@ async function proceedWithPayment(paymentMethod, amount) {
   }
 }
 
-// async function initiateRazorpayPayment(amount) {
-//   console.log("Initiating Razorpay payment with amount:", amount);
-//   try {
-//     if (!amount || isNaN(amount) || amount <= 0) {
-//       throw new Error('Invalid amount. Please enter a valid amount.');
-//     }
-
-//     const response = await fetch('/create-payment', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ amount: parseFloat(amount) })
-//     });
-
-//     if (!response.ok) throw new Error('Network response was not ok');
-//     const data = await response.json();
-//     console.log("Received payment creation response:", data);
-
-//     const options = {
-//       key: data.key,
-//       amount: data.amount,
-//       currency: 'INR',
-//       name: 'FOXHUB',
-//       description: 'Payment for your order',
-//       order_id: data.id,
-//       handler: function (response) {
-//         handleRazorpayResponse(response, data.id);
-//       },
-//       modal: {
-//         ondismiss: function() {
-//           handlePaymentFailure(data.id);
-//         }
-//       }
-//     };
-
-//     const rzp = new Razorpay(options);
-//     rzp.open();
-//   } catch (error) {
-//     console.error('Error creating payment:', error);
-//     toastr.error('Error creating payment. Please try again.');
-//   }
-// }
-
-async function initiateRazorpayPayment(razorpayOrderId, amount, orderId) {
-  const options = {
-    key:data.key, // Replace with your actual Razorpay key ID
-    amount: data.amount,// Amount in paise
-    currency: 'INR',
-    name: 'FOXHUB',
-    description: 'Payment for your order',
-    order_id: razorpayOrderId,
-    handler: async function (response) {
-      try {
-        const verifyResponse = await fetch('/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            order_id: razorpayOrderId,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature
-          })
-        });
-
-        const verifyData = await verifyResponse.json();
-
-        if (verifyData.success) {
-          window.location.href = `/thankyou/${verifyData.orderId}`;
-        } else {
-          toastr.error('Payment verification failed. Please contact support.');
-        }
-      } catch (error) {
-        console.error('Error verifying payment:', error);
-        toastr.error('An error occurred while verifying your payment. Please check your order status.');
-      }
-    },
-    prefill: {
-      name: 'Customer Name',
-      email: 'customer@example.com',
-      contact: 'Customer Phone Number'
-    },
-    theme: {
-      color: '#F37254'
+async function initiateRazorpayPayment(amount) {
+  console.log("Initiating Razorpay payment with amount:", amount);
+  try {
+    if (!amount || isNaN(amount) || amount <= 0) {
+      throw new Error('Invalid amount. Please enter a valid amount.');
     }
-  };
 
-  const rzp = new Razorpay(options);
-  rzp.open();
+    const response = await fetch('/create-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: parseFloat(amount) })
+    });
+
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    console.log("Received payment creation response:", data);
+
+    const options = {
+      key: data.key,
+      amount: data.amount,
+      currency: 'INR',
+      name: 'FOXHUB',
+      description: 'Payment for your order',
+      order_id: data.id,
+      handler: function (response) {
+        handleRazorpayResponse(response, data.id);
+      },
+      modal: {
+        ondismiss: function() {
+          handlePaymentFailure(data.id);
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch (error) {
+    console.error('Error creating payment:', error);
+    toastr.error('Error creating payment. Please try again.');
+  }
 }
-
-
 
 function handlePaymentFailure(orderId) {
   console.log('Payment failed or modal dismissed');
