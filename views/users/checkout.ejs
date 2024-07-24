@@ -1,163 +1,159 @@
 <%- include('../layouts/header.ejs') %>
-  <%- include('../layouts/navbar.ejs') %>
-    <style>
-      .billing-form .form-control {
-        font-weight: 550;
-        background: #fdfdfd !important;
-        color: black !important;
-        font-size: 15px;
-      }
-    </style>
-    <div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
-      <div class="container">
-        <div class="row no-gutters slider-text align-items-center justify-content-center">
-          <div class="col-md-9 ftco-animate text-center">
-            <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Checkout</span></p>
-            <h1 class="mb-0 bread">Checkout</h1>
-          </div>
-        </div>
+<%- include('../layouts/navbar.ejs') %>
+<style>
+  .billing-form .form-control {
+    font-weight: 550;
+    background: #fdfdfd !important;
+    color: black !important;
+    font-size: 15px;
+  }
+</style>
+<div class="hero-wrap hero-bread" style="background-image: url('/assets/images/bg_6.jpg');">
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <p class="breadcrumbs"><span class="mr-2"><a href="/home">Home</a></span> <span>Checkout</span></p>
+        <h1 class="mb-0 bread">Checkout</h1>
       </div>
     </div>
+  </div>
+</div>
 
-
-    <section class="ftco-section">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-xl-10 ftco-animate">
-            <% if (typeof errorMessage !== 'undefined') { %>
-              <div class="alert alert-danger" role="alert">
-                <%= errorMessage %>
-              </div>
-            <% } %>
-            <form id="paymentForm" action="/placeOrder" method="POST" class="billing-form">
-              <a href="/addAddress" class="btn btn-primary add-address-btn"
-                style="margin-left: 86%; margin-bottom: -12%; border-radius: 4%;">Add Address</a>
-              <a href="/userAddress" class="btn btn-primary add-address-btn"
-                style="margin-left: 70%; margin-bottom: -6%; border-radius: 4%;">Select Address</a>
-              <h3 class="mb-4 billing-heading">Billing Details</h3>
-              <div class="row align-items-end">
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <label for="state">State</label>
-                    <input type="text" class="form-control" name="state"
-                      value="<%= selectedAddress && selectedAddress.state ? selectedAddress.state : '' %>" readonly>
-                  </div>
-                </div>
-                <div class="w-100"></div>
-                <div class="col-md-12">
-                  <div class="form-group">
-                    <label for="address">Street Address</label>
-                    <input type="text" class="form-control" name="address"
-                      value="<%= selectedAddress && selectedAddress.address ? selectedAddress.address : '' %>" readonly>
-                  </div>
-                </div>
-                <div class="w-100"></div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label for="city">Town / City</label>
-                    <input type="text" class="form-control" name="city"
-                      value="<%= selectedAddress && selectedAddress.city ? selectedAddress.city : '' %>" readonly>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label for="postalCode">Postcode / ZIP *</label>
-                    <input type="text" class="form-control" name="postalCode"
-                      value="<%= selectedAddress && selectedAddress.postalCode ? selectedAddress.postalCode : '' %>" readonly>
-                  </div>
-                </div>
-              </div>
-
-              <div class="row mt-5 pt-3 d-flex">
-                <div class="col-md-6">
-                  <div class="cart-detail cart-total bg-light p-3 p-md-4 h-100">
-                    <h3 class="billing-heading mb-4">ORDER SUMMARY</h3>
-                    <% let subtotal = 0; if (cart && cart.items && cart.items.length > 0) { %>
-                      <% cart.items.forEach(item => {
-                        if (item.productId) {
-                          const itemTotal = item.quantity * item.productPrice;
-                          subtotal += itemTotal;
-                      %>
-                        <p class="d-flex">
-                          <span><%= item.productName %></span>
-                          <span><%= item.quantity %></span>
-                          <span><%= itemTotal.toFixed(2) %></span>
-                        </p>
-                      <% } }) %>
-                      <hr>
-                      <p class="d-flex total-price">
-                        <span>Subtotal</span>
-                        <span></span>
-                        <span id="subtotalAmount"><%= subtotal.toFixed(2) %></span>
-                      </p>
-                      <p class="d-flex discount-amount" id="discountRow" style="display: none;">
-                        <span>Discount</span>
-                        <span></span>
-                        <span id="discountAmount">0.00</span>
-                      </p>
-                      <p class="d-flex total-price">
-                        <span><strong>Total</strong></span>
-                        <span></span>
-                        <span id="totalAmount"><strong><%= subtotal.toFixed(2) %></strong></span>
-                      </p>
-                    <% } else { %>
-                      <p class="d-flex">
-                        <span>No items found in cart</span>
-                      </p>
-                    <% } %>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="cart-detail bg-light p-3 p-md-4 h-100">
-                    <h3 class="billing-heading mb-4">Payment Method</h3>
-                    <div class="form-group">
-                      <div class="col-md-12">
-                        <div class="radio">
-                          <label>
-                            <input type="radio" name="paymentMethod" value="Razorpay" class="mr-2" required> Razorpay
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <div class="col-md-12">
-                        <div class="radio">
-                          <label>
-                            <input type="radio" name="paymentMethod" value="Cash on Delivery" class="mr-2" required> Cash on Delivery
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="form-group">
-                      <div class="col-md-12">
-                        <div class="radio">
-                          <label>
-                            <input type="radio" name="paymentMethod" value="Wallet" class="mr-2" required> Wallet
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    <input type="hidden" name="amount" id="amount" value="<%= subtotal.toFixed(2) %>">
-                    <div class="form-group">
-                      <label for="couponCode">Coupon Code</label>
-                      <input type="text" class="form-control" id="couponCode" name="couponCode" placeholder="Enter coupon code">
-                      <button type="button" id="applyCouponBtn" class="btn btn-secondary mt-2">Apply Coupon</button>
-                    </div>
-                    <p><button id="placeOrderBtn" type="button" class="btn btn-primary py-3 px-4">Place an order</button></p>
-                  </div>
-                </div>
-              </div>
-            </form>
+<section class="ftco-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-xl-10 ftco-animate">
+        <% if (typeof errorMessage !== 'undefined') { %>
+          <div class="alert alert-danger" role="alert">
+            <%= errorMessage %>
           </div>
-        </div>
+        <% } %>
+        <form id="paymentForm" action="/placeOrder" method="POST" class="billing-form">
+          <a href="/addAddress" class="btn btn-primary add-address-btn"
+            style="margin-left: 86%; margin-bottom: -12%; border-radius: 4%;">Add Address</a>
+          <a href="/userAddress" class="btn btn-primary add-address-btn"
+            style="margin-left: 70%; margin-bottom: -6%; border-radius: 4%;">Select Address</a>
+          <h3 class="mb-4 billing-heading">Billing Details</h3>
+          <div class="row align-items-end">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="state">State</label>
+                <input type="text" class="form-control" name="state"
+                  value="<%= selectedAddress && selectedAddress.state ? selectedAddress.state : '' %>" readonly>
+              </div>
+            </div>
+            <div class="w-100"></div>
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="address">Street Address</label>
+                <input type="text" class="form-control" name="address"
+                  value="<%= selectedAddress && selectedAddress.address ? selectedAddress.address : '' %>" readonly>
+              </div>
+            </div>
+            <div class="w-100"></div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="city">Town / City</label>
+                <input type="text" class="form-control" name="city"
+                  value="<%= selectedAddress && selectedAddress.city ? selectedAddress.city : '' %>" readonly>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="postalCode">Postcode / ZIP *</label>
+                <input type="text" class="form-control" name="postalCode"
+                  value="<%= selectedAddress && selectedAddress.postalCode ? selectedAddress.postalCode : '' %>" readonly>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-5 pt-3 d-flex">
+            <div class="col-md-6">
+              <div class="cart-detail cart-total bg-light p-3 p-md-4 h-100">
+                <h3 class="billing-heading mb-4">ORDER SUMMARY</h3>
+                <% let subtotal = 0; if (cart && cart.items && cart.items.length > 0) { %>
+                  <% cart.items.forEach(item => {
+                    if (item.productId) {
+                      const itemTotal = item.quantity * item.productPrice;
+                      subtotal += itemTotal;
+                  %>
+                    <p class="d-flex">
+                      <span><%= item.productName %></span>
+                      <span><%= item.quantity %></span>
+                      <span><%= itemTotal.toFixed(2) %></span>
+                    </p>
+                  <% } }) %>
+                  <hr>
+                  <p class="d-flex total-price">
+                    <span>Subtotal</span>
+                    <span></span>
+                    <span id="subtotalAmount"><%= subtotal.toFixed(2) %></span>
+                  </p>
+                  <p class="d-flex discount-amount" id="discountRow" style="display: none;">
+                    <span>Discount</span>
+                    <span></span>
+                    <span id="discountAmount">0.00</span>
+                  </p>
+                  <p class="d-flex total-price">
+                    <span><strong>Total</strong></span>
+                    <span></span>
+                    <span id="totalAmount"><strong><%= subtotal.toFixed(2) %></strong></span>
+                  </p>
+                <% } else { %>
+                  <p class="d-flex">
+                    <span>No items found in cart</span>
+                  </p>
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="cart-detail bg-light p-3 p-md-4 h-100">
+                <h3 class="billing-heading mb-4">Payment Method</h3>
+                <div class="form-group">
+                  <div class="col-md-12">
+                    <div class="radio">
+                      <label>
+                        <input type="radio" name="paymentMethod" value="Razorpay" class="mr-2" required> Razorpay
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-md-12">
+                    <div class="radio">
+                      <label>
+                        <input type="radio" name="paymentMethod" value="Cash on Delivery" class="mr-2" required> Cash on Delivery
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-md-12">
+                    <div class="radio">
+                      <label>
+                        <input type="radio" name="paymentMethod" value="Wallet" class="mr-2" required> Wallet
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" name="amount" id="amount" value="<%= subtotal.toFixed(2) %>">
+                <div class="form-group">
+                  <label for="couponCode">Coupon Code</label>
+                  <input type="text" class="form-control" id="couponCode" name="couponCode" placeholder="Enter coupon code">
+                  <button type="button" id="applyCouponBtn" class="btn btn-secondary mt-2">Apply Coupon</button>
+                </div>
+                <p><button id="placeOrderBtn" type="button" class="btn btn-primary py-3 px-4">Place an order</button></p>
+              </div>
+            </div>
+          </div>
+        </form>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-
-
-    
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
@@ -199,7 +195,6 @@
     "hideMethod": "fadeOut"
   };
 });
-
 async function handleApplyCoupon() {
   const couponCodeInput = document.getElementById('couponCode');
   const couponCode = couponCodeInput.value.trim();
@@ -246,6 +241,7 @@ async function handleApplyCoupon() {
     toastr.error('An error occurred while applying the coupon. Please try again later.');
   }
 }
+
 
 async function handlePlaceOrder() {
   const form = document.getElementById('paymentForm');

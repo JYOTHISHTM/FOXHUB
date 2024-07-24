@@ -20,15 +20,12 @@ const renderCheckout = async (req, res) => {
   try {
     const userId = req.session.user_id;
 
-    // Redirect to login if user is not authenticated
     if (!userId) {
       return res.redirect('/login');
     }
 
-    // Fetch the user's cart with product details populated
     const cart = await Cart.findOne({ userId }).populate('items.productId');
 
-    // If cart is empty, render checkout with empty cart data
     if (!cart || cart.items.length === 0) {
       return res.render('checkout', { cart: [], selectedAddress: null, discountedAmount: 0 });
     }
@@ -121,7 +118,6 @@ const handleWalletPayment = async (userId, finalPrice) => {
     return { success: false, message: 'An error occurred while processing your payment. Please try again later.' };
   }
 };
-/// checkout controller
 
 
 const placeOrder = async (req, res) => {
@@ -307,10 +303,6 @@ const placeOrder = async (req, res) => {
 };
 
 
-
-
-
-
 const createPayment = async (req, res) => {
   try {
     let { amount } = req.body;
@@ -342,7 +334,6 @@ const createPayment = async (req, res) => {
 };
 
 
-// Function to verify Razorpay payment signature
 const verifyPayment = async (req, res) => {
   try {
     const { order_id, razorpay_payment_id, razorpay_signature } = req.body;
