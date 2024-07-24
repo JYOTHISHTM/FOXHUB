@@ -50,7 +50,6 @@ const applyCoupon = async (req, res) => {
     }
 
     const parsedOrderTotal = parseFloat(orderTotal);
-
     if (isNaN(parsedOrderTotal) || parsedOrderTotal <= 0) {
       console.log("Invalid order total:", orderTotal);
       return res.status(400).json({ success: false, message: 'Invalid order total.' });
@@ -81,7 +80,7 @@ const applyCoupon = async (req, res) => {
 
     const discountAmount = parsedOrderTotal * (coupon.discountPercentage / 100);
     const discountedTotal = parsedOrderTotal - discountAmount;
-    console.log("Coupon discount amount:", discountAmount);
+    console.log("coupon discount amount:", discountAmount);
     console.log("Calculated discounted total:", discountedTotal);
 
     return res.status(200).json({
@@ -90,8 +89,8 @@ const applyCoupon = async (req, res) => {
       message: 'Coupon applied successfully.'
     });
   } catch (error) {
-    console.error('Error applying coupon:', error.message);
-    return res.status(500).json({ success: false, message: `An error occurred while applying the coupon: ${error.message}. Please try again later.` });
+    console.error('Error applying coupon:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred while applying the coupon. Please try again later.' });
   }
 };
 

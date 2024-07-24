@@ -20,19 +20,24 @@ const renderCheckout = async (req, res) => {
   try {
     const userId = req.session.user_id;
 
+    // Redirect to login if user is not authenticated
     if (!userId) {
       return res.redirect('/login');
     }
 
+    // Fetch the user's cart with product details populated
     const cart = await Cart.findOne({ userId }).populate('items.productId');
 
+    // If cart is empty, render checkout with empty cart data
     if (!cart || cart.items.length === 0) {
       return res.render('checkout', { cart: [], selectedAddress: null, discountedAmount: 0 });
     }
 
+    // Fetch user's profile to get addresses
     const profile = await Profile.findOne({ userId });
     const addresses = profile ? profile.addresses : [];
 
+    // Determine the selected address based on query parameter
     const selectedAddressIndex = req.query.selectedAddress;
     let selectedAddress = null;
 
@@ -40,20 +45,27 @@ const renderCheckout = async (req, res) => {
       selectedAddress = addresses[selectedAddressIndex];
     } else {
       console.error('No valid selected address found.');
+      // Handle this case based on your application's logic
     }
 
+    // Calculate the discounted amount for the cart items
     let discountedAmount = 0;
     const cartItems = await Promise.all(cart.items.map(async (item) => {
       const { productId, quantity } = item;
       const product = await Product.findById(productId);
       let finalPrice = product.price;
 
+      // Check if there's an offer for the product and adjust final price
       const offer = await ProductOffer.findOne({ product: productId });
+      
+      // Fetch category offers for the product's category
       const categoryOffers = await CategoryOffer.find({ category: product.category });
 
       let categoryOffer = null;
       if (categoryOffers.length > 0) {
-        categoryOffer = categoryOffers.reduce((prev, current) => prev.discountPercentage > current.discountPercentage ? prev : current);
+        categoryOffer = categoryOffers.reduce((prev, current) => {
+          return prev.discountPercentage > current.discountPercentage ? prev : current;
+        });
       }
 
       if (offer) {
@@ -77,8 +89,7 @@ const renderCheckout = async (req, res) => {
       };
     }));
 
-    console.log('Selected Address:', selectedAddress); // Debug log
-
+    // Render the checkout view with cart items, selected address, and discounted amount
     res.render('checkout', { cart: { items: cartItems }, selectedAddress, discountedAmount: discountedAmount.toFixed(2) });
 
   } catch (error) {
@@ -86,7 +97,6 @@ const renderCheckout = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
-
 
 const handleWalletPayment = async (userId, finalPrice) => {
   try {
@@ -162,16 +172,6 @@ const placeOrder = async (req, res) => {
         body: JSON.stringify({ couponCode, orderTotal: totalAmount })
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed to apply coupon:", errorText);
-        return res.render('checkout', {
-          errorMessage: 'Invalid coupon code. Please try again.',
-          addressError: false,
-          paymentMethodError: false
-        });
-      }
-
       const data = await response.json();
       console.log("Coupon apply response:", data);
 
@@ -187,13 +187,13 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    let orderStatus = 'Processing';
+    let orderStatus = 'Processing'; 
     if (paymentMethod === 'Razorpay') {
       const options = {
-        amount: discountedAmount * 100,
+        amount: discountedAmount * 100, 
         currency: 'INR',
         receipt: `receipt_order_${new Date().getTime()}`,
-        payment_capture: 1
+        payment_capture: 1 
       };
 
       const razorpayResponse = await razorpay.orders.create(options);
@@ -205,7 +205,7 @@ const placeOrder = async (req, res) => {
         totalAmount: discountedAmount,
         address: { state, address, city, postalCode },
         paymentMethod,
-        razorpayOrderId: razorpayResponse.id,
+        razorpayOrderId: razorpayResponse.id, // Make sure this is set
         status: 'Pending',
         coupon: couponCode
       });
@@ -214,6 +214,7 @@ const placeOrder = async (req, res) => {
       console.log('Razorpay order saved:', order);
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      
       for (let item of validItems) {
         const product = await Product.findById(item.productId);
         if (product) {
@@ -222,9 +223,12 @@ const placeOrder = async (req, res) => {
             newQuantity = 0;
           }
           product.quantity = newQuantity;
-          await product.save();
+          await product.save(); 
         }
       }
+
+      
+
 
       return res.redirect(`/thankyou/${order._id}`);
     } else if (paymentMethod === 'Cash on Delivery') {
@@ -248,7 +252,7 @@ const placeOrder = async (req, res) => {
             newQuantity = 0;
           }
           product.quantity = newQuantity;
-          await product.save();
+          await product.save(); 
         }
       }
       return res.render('thankyou', { order, amount: discountedAmount, coupon: couponCode });
@@ -283,7 +287,7 @@ const placeOrder = async (req, res) => {
             newQuantity = 0;
           }
           product.quantity = newQuantity;
-          await product.save();
+          await product.save(); 
         }
       }
       return res.redirect(`/thankyou/${order._id}`);
@@ -300,7 +304,6 @@ const placeOrder = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
-
 
 
 
