@@ -251,29 +251,23 @@ async function handlePlaceOrder() {
   const form = document.getElementById('paymentForm');
   const formData = new FormData(form);
   const paymentMethod = formData.get('paymentMethod');
+  let amount = parseFloat(formData.get('amount'));
+  const couponCode = formData.get('couponCode').trim();
+  const address = formData.get('address');
 
-  if (!validateOrder(formData)) {
+  console.log("Payment Method:", paymentMethod);
+  console.log("Final Amount:", amount);
+  console.log("Coupon Code:", couponCode);
+  console.log("Address:", address);
+
+  if (!validateOrder(address, paymentMethod, amount)) {
     return;
   }
 
   try {
-    const response = await fetch('/placeOrder', {
-      method: 'POST',
-      body: formData
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      if (paymentMethod === 'Razorpay') {
-        await initiateRazorpayPayment(data.razorpayOrderId, data.amount, data.orderId);
-      } else {
-        window.location.href = `/thankyou/${data.orderId}`;
-      }
-    } else {
-      toastr.error(data.errorMessage || 'An error occurred while placing your order. Please try again.');
-    }
-  } catch (error) {
+    console.log("Proceeding with payment, Amount:", amount);
+    await proceedWithPayment(paymentMethod, amount);
+  } catch(error) {
     console.error('Error processing order:', error);
     toastr.error('An error occurred while processing your order. Please try again.');
   }
