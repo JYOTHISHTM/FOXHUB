@@ -55,7 +55,6 @@ const applyCoupon = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid order total.' });
     }
 
-    // Trim the coupon code on the server-side as well
     const trimmedCouponCode = couponCode.trim();
 
     const coupon = await Coupon.findOne({ code: trimmedCouponCode });
@@ -80,7 +79,7 @@ const applyCoupon = async (req, res) => {
 
     const discountAmount = parsedOrderTotal * (coupon.discountPercentage / 100);
     const discountedTotal = parsedOrderTotal - discountAmount;
-    console.log("coupon discount amount:", discountAmount);
+    console.log("Coupon discount amount:", discountAmount);
     console.log("Calculated discounted total:", discountedTotal);
 
     return res.status(200).json({
