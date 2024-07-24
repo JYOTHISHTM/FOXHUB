@@ -98,7 +98,6 @@ const renderCheckout = async (req, res) => {
   }
 };
 
-
 const handleWalletPayment = async (userId, finalPrice) => {
   try {
     const wallet = await Wallet.findOne({ userId });
@@ -122,6 +121,7 @@ const handleWalletPayment = async (userId, finalPrice) => {
     return { success: false, message: 'An error occurred while processing your payment. Please try again later.' };
   }
 };
+/// checkout controller
 
 
 const placeOrder = async (req, res) => {
@@ -164,37 +164,23 @@ const placeOrder = async (req, res) => {
 
     if (couponCode) {
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      try {
-        const response = await fetch(`${baseUrl}/apply-coupon`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ couponCode, orderTotal: totalAmount })
-        });
+      const response = await fetch(`${baseUrl}/apply-coupon`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ couponCode, orderTotal: totalAmount })
+      });
 
-        if (!response.ok) {
-          console.log("Coupon apply request failed:", response.status, response.statusText);
-          throw new Error('Failed to apply coupon');
-        }
+      const data = await response.json();
+      console.log("Coupon apply response:", data);
 
-        const data = await response.json();
-        console.log("Coupon apply response:", data);
-
-        if (data.success) {
-          discountedAmount = data.discountedAmount;
-        } else {
-          console.log("Coupon code invalid or not applicable");
-          return res.render('checkout', {
-            errorMessage: 'Invalid coupon code. Please try again.',
-            addressError: false,
-            paymentMethodError: false
-          });
-        }
-      } catch (error) {
-        console.log("Error applying coupon:", error.message);
+      if (data.success) {
+        discountedAmount = data.discountedAmount;
+      } else {
+        console.log("Coupon code invalid or not applicable");
         return res.render('checkout', {
-          errorMessage: 'Error applying coupon. Please try again.',
+          errorMessage: 'Invalid coupon code. Please try again.',
           addressError: false,
           paymentMethodError: false
         });
@@ -219,7 +205,7 @@ const placeOrder = async (req, res) => {
         totalAmount: discountedAmount,
         address: { state, address, city, postalCode },
         paymentMethod,
-        razorpayOrderId: razorpayResponse.id, 
+        razorpayOrderId: razorpayResponse.id, // Make sure this is set
         status: 'Pending',
         coupon: couponCode
       });
@@ -228,14 +214,21 @@ const placeOrder = async (req, res) => {
       console.log('Razorpay order saved:', order);
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      
       for (let item of validItems) {
         const product = await Product.findById(item.productId);
         if (product) {
           const newQuantity = product.quantity - item.quantity;
-          product.quantity = Math.max(newQuantity, 0);
+          if (newQuantity < 0) {
+            newQuantity = 0;
+          }
+          product.quantity = newQuantity;
           await product.save(); 
         }
       }
+
+      
+
 
       return res.redirect(`/thankyou/${order._id}`);
     } else if (paymentMethod === 'Cash on Delivery') {
@@ -255,7 +248,10 @@ const placeOrder = async (req, res) => {
         const product = await Product.findById(item.productId);
         if (product) {
           const newQuantity = product.quantity - item.quantity;
-          product.quantity = Math.max(newQuantity, 0);
+          if (newQuantity < 0) {
+            newQuantity = 0;
+          }
+          product.quantity = newQuantity;
           await product.save(); 
         }
       }
@@ -287,7 +283,10 @@ const placeOrder = async (req, res) => {
         const product = await Product.findById(item.productId);
         if (product) {
           const newQuantity = product.quantity - item.quantity;
-          product.quantity = Math.max(newQuantity, 0);
+          if (newQuantity < 0) {
+            newQuantity = 0;
+          }
+          product.quantity = newQuantity;
           await product.save(); 
         }
       }
@@ -305,6 +304,9 @@ const placeOrder = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+
+
+
 
 
 const createPayment = async (req, res) => {
@@ -338,6 +340,7 @@ const createPayment = async (req, res) => {
 };
 
 
+// Function to verify Razorpay payment signature
 const verifyPayment = async (req, res) => {
   try {
     const { order_id, razorpay_payment_id, razorpay_signature } = req.body;
