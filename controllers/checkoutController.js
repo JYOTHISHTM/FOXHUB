@@ -370,7 +370,7 @@ const verifyPayment = async (req, res) => {
 
     const text = `${order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET) // Corrected this line
       .update(text)
       .digest('hex');
 
@@ -382,26 +382,14 @@ const verifyPayment = async (req, res) => {
         { status: 'Paid' },
         { new: true }
       );
-
-      // Clear the user's cart
-      await Cart.findOneAndUpdate({ userId: order.user }, { items: [] });
-
-      // Update product quantities
-      for (let item of order.items) {
-        const product = await Product.findById(item.productId);
-        if (product) {
-          product.quantity = Math.max(0, product.quantity - item.quantity);
-          await product.save();
-        }
-      }
-
-      return res.json({ success: true, orderId: order._id });
+      return res.redirect(`/thankyou/${order._id}`);
+      // return res.json({ status: 'success', message: 'Payment verified successfully', order });
     } else {
-      return res.status(400).json({ success: false, message: 'Payment verification failed' });
+      return res.status(400).json({ status: 'error', message: 'Payment verification failed' });
     }
   } catch (error) {
     console.error('Error verifying payment:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res.status(500).json({ error: error.message });
   }
 };
 
