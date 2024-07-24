@@ -163,7 +163,9 @@ const placeOrder = async (req, res) => {
     console.log("Total amount calculated:", totalAmount);
 
     if (couponCode) {
+      console.log('Applying coupon code:"'+couponCode+'"');
       const baseUrl = `${req.protocol}://${req.get('host')}`;
+      console.log(baseUrl);
       const response = await fetch(`${baseUrl}/apply-coupon`, {
         method: 'POST',
         headers: {
@@ -171,12 +173,14 @@ const placeOrder = async (req, res) => {
         },
         body: JSON.stringify({ couponCode, orderTotal: totalAmount })
       });
+      console.log("Coupon apply response:", response);
 
       const data = await response.json();
       console.log("Coupon apply response:", data);
 
       if (data.success) {
         discountedAmount = data.discountedAmount;
+        console.log(discountedAmount);
       } else {
         console.log("Coupon code invalid or not applicable");
         return res.render('checkout', {
