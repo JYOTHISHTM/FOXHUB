@@ -364,13 +364,13 @@ const createPayment = async (req, res) => {
 const verifyPayment = async (req, res) => {
   try {
     const { order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    console.log(order_id + "order_id");
-    console.log(razorpay_payment_id + "razorpay_payment_id");
-    console.log(razorpay_signature + "razorpay_signature");
+    console.log(order_id + " order_id");
+    console.log(razorpay_payment_id + " razorpay_payment_id");
+    console.log(razorpay_signature + " razorpay_signature");
 
     const text = `${order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET) // Corrected this line
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(text)
       .digest('hex');
 
@@ -382,8 +382,12 @@ const verifyPayment = async (req, res) => {
         { status: 'Paid' },
         { new: true }
       );
-      return res.redirect(`/thankyou/${order._id}`);
-      // return res.json({ status: 'success', message: 'Payment verified successfully', order });
+
+      if (!order) {
+        return res.status(404).json({ status: 'error', message: 'Order not found' });
+      }
+
+      return res.redirect(`/thankyou/${order.razorpayOrderId}`);
     } else {
       return res.status(400).json({ status: 'error', message: 'Payment verification failed' });
     }
@@ -392,7 +396,6 @@ const verifyPayment = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 const orderFailure = async (req, res) => {
   try {
