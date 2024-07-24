@@ -172,6 +172,16 @@ const placeOrder = async (req, res) => {
         body: JSON.stringify({ couponCode, orderTotal: totalAmount })
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to apply coupon:", errorText);
+        return res.render('checkout', {
+          errorMessage: 'Invalid coupon code. Please try again.',
+          addressError: false,
+          paymentMethodError: false
+        });
+      }
+
       const data = await response.json();
       console.log("Coupon apply response:", data);
 
@@ -187,13 +197,13 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    let orderStatus = 'Processing'; 
+    let orderStatus = 'Processing';
     if (paymentMethod === 'Razorpay') {
       const options = {
-        amount: discountedAmount * 100, 
+        amount: discountedAmount * 100,
         currency: 'INR',
         receipt: `receipt_order_${new Date().getTime()}`,
-        payment_capture: 1 
+        payment_capture: 1
       };
 
       const razorpayResponse = await razorpay.orders.create(options);
@@ -205,7 +215,7 @@ const placeOrder = async (req, res) => {
         totalAmount: discountedAmount,
         address: { state, address, city, postalCode },
         paymentMethod,
-        razorpayOrderId: razorpayResponse.id, // Make sure this is set
+        razorpayOrderId: razorpayResponse.id,
         status: 'Pending',
         coupon: couponCode
       });
@@ -214,7 +224,6 @@ const placeOrder = async (req, res) => {
       console.log('Razorpay order saved:', order);
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      
       for (let item of validItems) {
         const product = await Product.findById(item.productId);
         if (product) {
@@ -223,12 +232,9 @@ const placeOrder = async (req, res) => {
             newQuantity = 0;
           }
           product.quantity = newQuantity;
-          await product.save(); 
+          await product.save();
         }
       }
-
-      
-
 
       return res.redirect(`/thankyou/${order._id}`);
     } else if (paymentMethod === 'Cash on Delivery') {
@@ -252,7 +258,7 @@ const placeOrder = async (req, res) => {
             newQuantity = 0;
           }
           product.quantity = newQuantity;
-          await product.save(); 
+          await product.save();
         }
       }
       return res.render('thankyou', { order, amount: discountedAmount, coupon: couponCode });
@@ -287,7 +293,7 @@ const placeOrder = async (req, res) => {
             newQuantity = 0;
           }
           product.quantity = newQuantity;
-          await product.save(); 
+          await product.save();
         }
       }
       return res.redirect(`/thankyou/${order._id}`);
@@ -304,6 +310,7 @@ const placeOrder = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+
 
 
 
@@ -371,10 +378,6 @@ const verifyPayment = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-
-
-
 
 
 const orderFailure = async (req, res) => {
