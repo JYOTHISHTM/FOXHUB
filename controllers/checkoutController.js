@@ -135,20 +135,18 @@ const placeOrder = async (req, res) => {
     // Address validation
     if (!state || !address || !city || !postalCode) {
       console.log("Address validation failed");
-      return res.render('checkout', {
-        errorMessage: 'Please fill out or select your address details before placing an order.',
-        addressError: true,
-        paymentMethodError: false
+      return res.status(400).json({
+        success: false,
+        message: 'Please fill out or select your address details before placing an order.'
       });
     }
 
     // Payment method validation
     if (!paymentMethod) {
       console.log("Payment method validation failed");
-      return res.render('checkout', {
-        errorMessage: 'Please select a payment method.',
-        addressError: false,
-        paymentMethodError: true
+      return res.status(400).json({
+        success: false,
+        message: 'Please select a payment method.'
       });
     }
 
@@ -156,7 +154,10 @@ const placeOrder = async (req, res) => {
     const cart = await Cart.findOne({ userId }).populate('items.productId');
     if (!cart || cart.items.length === 0) {
       console.log("Empty cart");
-      return res.redirect('/cart');
+      return res.status(400).json({
+        success: false,
+        message: 'Your cart is empty. Please add items before placing an order.'
+      });
     }
 
     // Calculate total amount
@@ -183,31 +184,29 @@ const placeOrder = async (req, res) => {
 
         console.log("Coupon apply response status:", response.status);
 
-        if (!response.ok) {
+        if (response.status === 404) {
+          console.log("Coupon endpoint not found");
+          // Proceed without applying the coupon
+        } else if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Coupon apply response:", data);
-
-        if (data.success) {
-          discountedAmount = parseFloat(data.discountedAmount);
-          console.log("Discounted amount:", discountedAmount);
         } else {
-          console.log("Coupon code invalid or not applicable:", data.message);
-          return res.render('checkout', {
-            errorMessage: data.message || 'Invalid coupon code. Please try again.',
-            addressError: false,
-            paymentMethodError: false
-          });
+          const data = await response.json();
+          console.log("Coupon apply response:", data);
+
+          if (data.success) {
+            discountedAmount = parseFloat(data.discountedAmount);
+            console.log("Discounted amount:", discountedAmount);
+          } else {
+            console.log("Coupon code invalid or not applicable:", data.message);
+            return res.status(400).json({
+              success: false,
+              message: data.message || 'Invalid coupon code. Please try again.'
+            });
+          }
         }
       } catch (error) {
         console.error("Error applying coupon:", error);
-        return res.render('checkout', {
-          errorMessage: 'Error applying coupon. Please try again.',
-          addressError: false,
-          paymentMethodError: false
-        });
+        // Proceed without applying the coupon
       }
     }
 
@@ -238,7 +237,12 @@ const placeOrder = async (req, res) => {
 
         await order.save();
         console.log('Razorpay order saved:', order);
-        return res.redirect(`/thankyou/${order._id}`);
+        return res.status(200).json({
+          success: true,
+          message: 'Razorpay order created successfully.',
+          orderId: order._id,
+          razorpayOrderId: razorpayResponse.id
+        });
 
       case 'Cash on Delivery':
         order = new Order({
@@ -259,10 +263,9 @@ const placeOrder = async (req, res) => {
         const walletPaymentResult = await handleWalletPayment(userId, totalAmount, discountedAmount);
         if (!walletPaymentResult.success) {
           console.log("Wallet payment failed");
-          return res.render('checkout', {
-            errorMessage: walletPaymentResult.message || 'Error processing wallet payment. Please try again.',
-            addressError: false,
-            paymentMethodError: true
+          return res.status(400).json({
+            success: false,
+            message: walletPaymentResult.message || 'Error processing wallet payment. Please try again.'
           });
         }
 
@@ -282,10 +285,9 @@ const placeOrder = async (req, res) => {
 
       default:
         console.log("Invalid payment method selected");
-        return res.render('checkout', {
-          errorMessage: 'Invalid payment method selected.',
-          addressError: false,
-          paymentMethodError: true
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid payment method selected.'
         });
     }
 
@@ -303,19 +305,21 @@ const placeOrder = async (req, res) => {
       await Cart.findOneAndUpdate({ userId }, { items: [] });
     }
 
-    // Redirect to thank you page or render it directly
-    if (paymentMethod === 'Cash on Delivery') {
-      return res.render('thankyou', { order, amount: discountedAmount, coupon: couponCode });
-    } else {
-      return res.redirect(`/thankyou/${order._id}`);
-    }
+    // Return success response
+    return res.status(200).json({
+      success: true,
+      message: 'Order placed successfully.',
+      orderId: order._id
+    });
 
   } catch (error) {
     console.error('Error placing order:', error);
-    res.status(500).render('error', { message: 'An error occurred while placing your order. Please try again.' });
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while placing your order. Please try again.'
+    });
   }
 };
-
 
 
 
