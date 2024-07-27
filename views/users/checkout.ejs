@@ -283,7 +283,7 @@ function validateOrder(address, paymentMethod, amount) {
     return false;
   }
   if (paymentMethod === 'Cash on Delivery' && amount > 1000) {
-    toastr.error('Cash on Delivery is not allowed for orders over $1000. Please choose another payment method.');
+    toastr.error('Cash on Delivery is not allowed for orders over 1000. Please choose another payment method.');
     return false;
   }
   return true;

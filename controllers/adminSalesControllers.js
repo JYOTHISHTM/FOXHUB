@@ -19,7 +19,7 @@ const renderSalesReport = async (req, res) => {
     let { filter, startDate, endDate, page } = req.query;
     filter = filter || 'day';
     page = parseInt(page) || 1;
-    const limit = 3;
+    const limit = 10;
 
     let start;
     let end = moment().endOf('day');
@@ -51,7 +51,7 @@ const renderSalesReport = async (req, res) => {
 
     const orders = await Order.find({
       createdAt: { $gte: start.toDate(), $lte: end.toDate() },
-      status: { $nin: ['Cancelled', 'Returned', 'Payment Failed', 'Pending'] }
+      status: { $nin: ['Cancelled', 'Returned', 'Payment Failed'] }
     })
       .populate('items.productId')
       .populate('user')

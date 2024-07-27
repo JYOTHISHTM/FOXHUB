@@ -43,9 +43,6 @@ const renderCheckout = async (req, res) => {
 
     if (selectedAddressIndex !== undefined && addresses.length > 0) {
       selectedAddress = addresses[selectedAddressIndex];
-    } else {
-      console.error('No valid selected address found.');
-      // Handle this case based on your application's logic
     }
 
     // Calculate the discounted amount for the cart items
@@ -168,10 +165,10 @@ const placeOrder = async (req, res) => {
 
     // Apply coupon if provided
     if (couponCode) {
-      console.log('Applying coupon code:"'+couponCode+'"');
+      console.log('Applying coupon code:"' + couponCode + '"');
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       console.log("Base URL:", baseUrl);
-      
+
       try {
         const response = await fetch(`${baseUrl}/apply-coupon`, {
           method: 'POST',
@@ -218,7 +215,7 @@ const placeOrder = async (req, res) => {
           amount: Math.round(discountedAmount * 100), // Razorpay expects amount in paise
           currency: 'INR',
           receipt: `receipt_order_${new Date().getTime()}`,
-          payment_capture: 1 
+          payment_capture: 1
         };
 
         const razorpayResponse = await razorpay.orders.create(options);
@@ -237,11 +234,7 @@ const placeOrder = async (req, res) => {
 
         await order.save();
         console.log('Razorpay order saved:', order);
-        return res.render('checkout', {
-          razorpayOrderId: razorpayResponse.id,
-          amount: discountedAmount,
-          orderId: order._id
-        });
+        return res.redirect(`/thankyou/${order._id}`);
 
       case 'Cash on Delivery':
         order = new Order({
@@ -318,6 +311,7 @@ const placeOrder = async (req, res) => {
     });
   }
 };
+
 
 
 
