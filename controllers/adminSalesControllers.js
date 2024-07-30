@@ -218,7 +218,6 @@ const filterSalesReport = async (req, res) => {
 
 
 
-
 const downloadSalesReportPDF = async (req, res) => {
   try {
     const { filter, startDate, endDate } = req.query;
@@ -285,7 +284,7 @@ const downloadSalesReportPDF = async (req, res) => {
     const overallSalesCount = reportData.length;
     const overallAmount = reportData.reduce((sum, row) => sum + row.amount, 0);
     const overallDiscount = reportData.reduce((sum, row) => sum + row.discount, 0);
-    const overallProfit = reportData.reduce((sum, row) => sum + row.finalPrice, 0);
+    const overallProfit = overallAmount - overallDiscount;
 
     // Add overall summary
     yPosition += 40;
@@ -307,8 +306,6 @@ const downloadSalesReportPDF = async (req, res) => {
     res.status(500).send(error.message);
   }
 };
-
-
 
 const downloadSalesReportExcel = async (req, res) => {
   try {
@@ -399,7 +396,7 @@ const downloadSalesReportExcel = async (req, res) => {
     const overallSalesCount = reportData.length;
     const overallAmount = reportData.reduce((sum, row) => sum + row.amount, 0);
     const overallDiscount = reportData.reduce((sum, row) => sum + row.discount, 0);
-    const overallProfit = reportData.reduce((sum, row) => sum + row.finalPrice, 0);
+    const overallProfit = overallAmount - overallDiscount;
 
     // Add overall summary
     const summaryStartRow = reportData.length + 7;
@@ -485,43 +482,50 @@ async function getFilteredOrders(filter, startDate, endDate) {
 
 async function generateReportData(orders) {
   return await Promise.all(orders.map(async (order) => {
+    let orderAmount = 0;
     let totalDiscount = 0;
-    let finalPrice = 0;
 
     for (const item of order.items) {
       const product = item.productId;
       const productOffer = await ProductOffer.findOne({ product: product._id });
       const categoryOffer = await CategoryOffer.findOne({ category: product.category });
 
-      let itemDiscount = 0;
       let itemPrice = product.price * item.quantity;
+      let itemDiscount = 0;
 
-      if (productOffer) {
+      if (productOffer && productOffer.discountPercentage) {
         itemDiscount = Math.max(itemDiscount, itemPrice * (productOffer.discountPercentage / 100));
       }
 
-      if (categoryOffer) {
+      if (categoryOffer && categoryOffer.discountPercentage) {
         itemDiscount = Math.max(itemDiscount, itemPrice * (categoryOffer.discountPercentage / 100));
       }
 
-      totalDiscount += itemDiscount;
-      finalPrice += itemPrice - itemDiscount;
+      orderAmount += itemPrice - itemDiscount;
     }
 
+    let couponDiscount = 0;
     if (order.coupon) {
-      totalDiscount += order.coupon.discountAmount;
-      finalPrice -= order.coupon.discountAmount;
+      const coupon = await Coupon.findOne({ code: order.coupon });
+      if (coupon && coupon.discountPercentage) {
+        couponDiscount = (orderAmount * coupon.discountPercentage) / 100;
+      } else if (coupon && coupon.discountAmount) {
+        couponDiscount = coupon.discountAmount;
+      }
     }
+
+    totalDiscount = couponDiscount;
+    const finalPrice = Math.max(0, orderAmount - couponDiscount);
 
     return {
       number: order._id,
-      name: order.user.name,
-      product: order.items.map(item => item.productId.name).join(', '),
-      amount: order.totalAmount,
+      name: order.user ? order.user.name : 'N/A',
+      product: order.items.map(item => item.productId ? item.productId.name : 'Unknown Product').join(', '),
+      amount: parseFloat(orderAmount.toFixed(2)),
       discount: parseFloat(totalDiscount.toFixed(2)),
-      paymentMethod: order.paymentMethod,
+      paymentMethod: order.paymentMethod || 'N/A',
       finalPrice: parseFloat(finalPrice.toFixed(2)),
-      status: order.status
+      status: order.status || 'N/A'
     };
   }));
 }
