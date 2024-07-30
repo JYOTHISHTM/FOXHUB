@@ -84,12 +84,8 @@ const renderSalesReport = async (req, res) => {
         const productOffer = await ProductOffer.findOne({ product: product._id });
         const categoryOffer = await CategoryOffer.findOne({ category: product.category });
 
-        console.log('Product:', product.name, 'Price:', product.price);
-        console.log('Product Offer:', productOffer);
-        console.log('Category Offer:', categoryOffer);
-
-        let itemDiscount = 0;
         let itemPrice = product.price * item.quantity;
+        let itemDiscount = 0;
 
         if (productOffer) {
           itemDiscount = Math.max(itemDiscount, product.price * (productOffer.discountPercentage / 100));
@@ -99,36 +95,26 @@ const renderSalesReport = async (req, res) => {
           itemDiscount = Math.max(itemDiscount, product.price * (categoryOffer.discountPercentage / 100));
         }
 
-        console.log('Item Discount:', itemDiscount);
-
-        totalDiscount += itemDiscount * item.quantity;
-        finalPrice += (product.price - itemDiscount) * item.quantity;
-        orderAmount += itemPrice;
+        const discountedItemPrice = (product.price - itemDiscount) * item.quantity;
+        orderAmount += discountedItemPrice;
       }
 
+      let couponDiscount = 0;
       if (order.coupon) {
-        console.log('Order Coupon:', order.coupon);
-
         const coupon = await Coupon.findOne({ code: order.coupon });
-        let couponDiscount = 0;
-
         if (coupon && coupon.discountPercentage) {
           couponDiscount = (orderAmount * coupon.discountPercentage) / 100;
-        } else {
-          couponDiscount = 0;
         }
-
-        console.log('Coupon Discount:', couponDiscount);
-
-        totalDiscount += couponDiscount;
-        finalPrice -= couponDiscount;
       }
+
+      totalDiscount = couponDiscount;
+      finalPrice = orderAmount - couponDiscount;
 
       return {
         number: order._id,
         name: order.user.name,
         product: order.items.map(item => item.productId.name).join(', '),
-        amount: orderAmount,
+        amount: parseFloat(orderAmount.toFixed(2)),
         discount: parseFloat(totalDiscount.toFixed(2)),
         paymentMethod: order.paymentMethod,
         finalPrice: parseFloat(finalPrice.toFixed(2)),
@@ -148,7 +134,6 @@ const renderSalesReport = async (req, res) => {
 
     for (const order of allOrders) {
       let orderAmount = 0;
-      let orderDiscount = 0;
 
       for (const item of order.items) {
         const product = item.productId;
@@ -166,25 +151,19 @@ const renderSalesReport = async (req, res) => {
           itemDiscount = Math.max(itemDiscount, product.price * (categoryOffer.discountPercentage / 100));
         }
 
-        orderAmount += itemPrice;
-        orderDiscount += itemDiscount * item.quantity;
+        orderAmount += (product.price - itemDiscount) * item.quantity;
       }
 
+      let couponDiscount = 0;
       if (order.coupon) {
         const coupon = await Coupon.findOne({ code: order.coupon });
-        let couponDiscount = 0;
-
         if (coupon && coupon.discountPercentage) {
           couponDiscount = (orderAmount * coupon.discountPercentage) / 100;
-        } else {
-          couponDiscount = 0;
         }
-
-        orderDiscount += couponDiscount;
       }
 
       overallAmount += orderAmount;
-      overallDiscount += orderDiscount;
+      overallDiscount += couponDiscount;
     }
 
     overallProfit = overallAmount - overallDiscount;
